@@ -1006,7 +1006,7 @@ class LatentDiffusion(DDPM):
         #     self.step_curve.append(self.global_step)
         #     self.losses_curve.append(loss.data.cpu().numpy())
         #     self.draw_loss_curve(self.losses_curve,self.step_curve)
-        if self.global_step % 500 == 0: ##1000/4 accmulate gradient
+        if self.global_step % 3000 == 0: ##1000/4 accmulate gradient
             if len(self.losses_curve) == 0:
                 self.losses_curve.append(loss.data.cpu().numpy())
             elif self.global_step not in step_record:
@@ -1033,8 +1033,8 @@ class LatentDiffusion(DDPM):
         plt.ylabel('loss')
         plt.xlabel('global_step')
         plt.legend()    
-        index = 5
-        filename = "idea4_all" + str(index) + ".jpg"
+        index = 4
+        filename = "idea4_all_attnFliter_" + str(index) + ".jpg"
         plt.savefig(os.path.join('lossCurve', filename))
     
 

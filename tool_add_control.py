@@ -81,7 +81,7 @@ def get_node_name(name, parent_name):
         return False, ''
     return True, name[len(parent_name):]
 
-vae_pretrained_weights = torch.load('./VaeModel/vae-ft-mse-840000-ema-pruned.ckpt')
+vae_pretrained_weights = torch.load('/workspace/ControlNetWithDreamPoseCopy/VaeModel/vae-ft-mse-840000-ema-pruned.ckpt')
 if 'state_dict' in vae_pretrained_weights:
     vae_pretrained_weights = vae_pretrained_weights['state_dict']
     

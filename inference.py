@@ -86,9 +86,9 @@ def log_local(save_dir, split, images, global_step, current_epoch, batch_idx):
             Image.fromarray(grid).save(path)
 
 
-debugpy.listen(("0.0.0.0", 7777))
-print("Waiting for client to attach...")
-debugpy.wait_for_client()
+# debugpy.listen(("0.0.0.0", 7777))
+# print("Waiting for client to attach...")
+# debugpy.wait_for_client()
 
 
 parser = argparse.ArgumentParser(description='help')
@@ -107,8 +107,8 @@ DataConf.data.val.batch_size = batch_size
 
 val_dataset, train_dataset = deepfashion_data.get_train_val_dataloader(DataConf.data, labels_required = True, distributed = False)
 
-model = create_model('./models/idea1_2.yaml').cpu()
-model.load_state_dict(load_state_dict('./checkpoint_for_idea1_2__controlNet_fixResidual/new_exp_sd21_epoch=80_step=249000.ckpt', location='cpu'))
+model = create_model('./models/idea4.yaml').cpu()
+model.load_state_dict(load_state_dict('./checkpoint_for_idea4_all_attnFliter/new_exp_sd21_epoch=171_step=636000.ckpt', location='cpu'))
 model = model.cuda()
 ddim_sampler = DDIMSampler(model)
 
@@ -129,7 +129,7 @@ for x in val_dataset:
             images[k] = images[k].detach().cpu()
             images[k] = torch.clamp(images[k], -1., 1.)
 
-    name = "idea1_2__controlNet_fixResidual"
+    name = "idea4_all_attnFliter_epoch_171"
     log_local("", "train/inferenceLog_" + name, images,
                 0, 0, index)
     index += 1

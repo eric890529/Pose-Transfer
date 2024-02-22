@@ -42,55 +42,74 @@ DataConf.data.val.batch_size = batch_size
 
 val_dataset, train_dataset = deepfashion_data.get_train_val_dataloader(DataConf.data, labels_required = True, distributed = False)
 
-model = create_model('./models/idea1_2.yaml').cpu()
-model.load_state_dict(load_state_dict('./checkpoint_for_idea1_2__controlNet_fixResidual/new_exp_sd21_epoch=89_step=276000.ckpt', location='cpu'))
-model = model.cuda()
-model.eval()
-ddim_sampler = DDIMSampler(model)
+ckpt_list = ["new_exp_sd21_epoch=171_step=636000.ckpt", "new_exp_sd21_epoch=170_step=630000.ckpt", 
+             "new_exp_sd21_epoch=168_step=624000.ckpt", "new_exp_sd21_epoch=166_step=618000.ckpt", "new_exp_sd21_epoch=165_step=612000.ckpt", 
+             "new_exp_sd21_epoch=163_step=606000.ckpt", "new_exp_sd21_epoch=162_step=600000.ckpt" "new_exp_sd21_epoch=160_step=594000.ckpt"]
 
-if config.save_memory:
-    model.low_vram_shift(is_diffusing=True)
-index = 0
+path = "/workspace/ControlNet_idea1_2/checkpoint_for_idea4_all_attnFliter"
+dir_list = os.listdir(path)
+print("Files and directories in '", path, "' :")
+# prints all files
+print(dir_list)
+import os 
+os.environ['CUDA_VISIBLE_DEVICES'] = "1"
+torch.cuda.set_device(1)
+for ckpt in dir_list:
+    eIdx = ckpt.find("epoch")
+    epoch = ckpt[eIdx:eIdx+9]
+    epoch = epoch.replace("=", "_")
 
-ddim_steps = 50
-strength = 1.0
-guess_mode = False
-count = 0
-for x in val_dataset:
-    count += batch_size
-    if count > len(val_dataset.dataset):
-        batch_size = batch_size - (count - len(val_dataset.dataset))
-    with torch.no_grad():
-        z, c = model.get_input(x, "nothing", bs=batch_size, is_inference = True)
-        control =  c["c_concat"][0][:batch_size]
-        c_style = c["c_style"][0][:batch_size] #
-        cond = {"c_concat": [control], "c_style" : [c_style]}
-        uc_full = {"c_concat": [control],  "c_style" : [c_style]}
-        shape = (4, DataConf.data.resolution // 8, DataConf.data.resolution // 8)
+    model = create_model('./models/idea4.yaml').cpu()
+    model.load_state_dict(load_state_dict('./checkpoint_for_idea4_all_attnFliter/' + ckpt, location='cpu'))
+    model = model.cuda(1)
+    model.eval()
+    ddim_sampler = DDIMSampler(model)
 
-        if config.save_memory:
-            model.low_vram_shift(is_diffusing=True)
+    if config.save_memory:
+        model.low_vram_shift(is_diffusing=True)
+    index = 0
 
-        model.control_scales = [strength * (0.825 ** float(12 - i)) for i in range(13)] if guess_mode else ([strength] * 13)  # Magic number. IDK why. Perhaps because 0.825**12<0.01 but 0.826**12>0.01
-        samples, intermediates = ddim_sampler.sample(ddim_steps, batch_size,
-                                                        shape, cond, verbose=False, eta=0.0,
-                                                        unconditional_guidance_scale=9.0,
-                                                        unconditional_conditioning=uc_full)
+    ddim_steps = 50
+    strength = 1.0
+    guess_mode = False
+    count = 0
+    batch_size = 32
 
-        if config.save_memory:
-            model.low_vram_shift(is_diffusing=False)
+    for x in val_dataset:
+        count += batch_size
+        if count > len(val_dataset.dataset):
+            batch_size = batch_size - (count - len(val_dataset.dataset))
+        with torch.no_grad():
+            z, c = model.get_input(x, "nothing", bs=batch_size, is_inference = True)
+            control =  c["c_concat"][0][:batch_size]
+            c_style = c["c_style"][0][:batch_size] #
+            cond = {"c_concat": [control], "c_style" : [c_style]}
+            uc_full = {"c_concat": [control],  "c_style" : [c_style]}
+            shape = (4, DataConf.data.resolution // 8, DataConf.data.resolution // 8)
 
-        x_samples = model.decode_first_stage(samples)
-        x_samples = (einops.rearrange(x_samples, 'b c h w -> b h w c') * 127.5 + 127.5).cpu().numpy().clip(0, 255).astype(np.uint8)
+            if config.save_memory:
+                model.low_vram_shift(is_diffusing=True)
 
-        results = [x_samples[i] for i in range(batch_size)]
-        path = './inferenceValDataset_idea1_2__controlNet_fixResidual'
-        if not os.path.exists(path):
-            os.makedirs(path)
-        index = 0
-        for result in results:
-            path = './inferenceValDataset_idea1_2__controlNet_fixResidual'
-            path = path + '/' + x["path"][index]
-            Image.fromarray(result).save(path)
-            index += 1
-    
+            model.control_scales = [strength * (0.825 ** float(12 - i)) for i in range(13)] if guess_mode else ([strength] * 13)  # Magic number. IDK why. Perhaps because 0.825**12<0.01 but 0.826**12>0.01
+            samples, intermediates = ddim_sampler.sample(ddim_steps, batch_size,
+                                                            shape, cond, verbose=False, eta=0.0,
+                                                            unconditional_guidance_scale=9.0,
+                                                            unconditional_conditioning=uc_full)
+
+            if config.save_memory:
+                model.low_vram_shift(is_diffusing=False)
+
+            x_samples = model.decode_first_stage(samples)
+            x_samples = (einops.rearrange(x_samples, 'b c h w -> b h w c') * 127.5 + 127.5).cpu().numpy().clip(0, 255).astype(np.uint8)
+
+            results = [x_samples[i] for i in range(batch_size)]
+            path = './inferenceValDataset_idea4_all_attnFliter_' + epoch 
+            if not os.path.exists(path):
+                os.makedirs(path)
+            index = 0
+            for result in results:
+                path = './inferenceValDataset_idea4_all_attnFliter_' + epoch 
+                path = path + '/' + x["path"][index]
+                Image.fromarray(result).save(path)
+                index += 1
+        

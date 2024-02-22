@@ -106,7 +106,7 @@ pretrained_weights = torch.load(input_path)
 if 'state_dict' in pretrained_weights:
     pretrained_weights = pretrained_weights['state_dict']
 
-vae_pretrained_weights = torch.load('./VaeModel/vae-ft-mse-840000-ema-pruned.ckpt')
+vae_pretrained_weights = torch.load('/workspace/ControlNetWithDreamPoseCopy/VaeModel/vae-ft-mse-840000-ema-pruned.ckpt')
 if 'state_dict' in vae_pretrained_weights:
     vae_pretrained_weights = vae_pretrained_weights['state_dict']
 # print(vae_pretrained_weights.keys())

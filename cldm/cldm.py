@@ -569,17 +569,21 @@ class ControlLDM(LatentDiffusion):
             self.set_optim_lr(self.optimizers(), 1e-6)
         if self.current_epoch > 60:
             self.set_optim_lr(self.optimizers(), 5e-7)
+        if self.current_epoch > 90:    
+            self.set_optim_lr(self.optimizers(), 2.5e-7)
 
     def on_train_epoch_end(self):
         if self.current_epoch > 40:
             self.set_optim_lr(self.optimizers(), 1e-6)
         if self.current_epoch > 60:
             self.set_optim_lr(self.optimizers(), 5e-7)
+        if self.current_epoch > 90:    
+            self.set_optim_lr(self.optimizers(), 2.5e-7)
             
     def set_optim_lr( self, optim, lr ) :
         for param in optim.param_groups :
             param['lr'] = lr
-
+            
     def low_vram_shift(self, is_diffusing):
         if is_diffusing:
             self.model = self.model.cuda()
