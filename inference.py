@@ -31,50 +31,71 @@ def log_local(save_dir, split, images, global_step, current_epoch, batch_idx):
         if k != 'control':
             grid = (grid + 1.0) / 2.0  # -1,1 -> 0,1; c,h,w
         if k == 'control':
-            #grid, pose, pose_dist = torch.split(grid, [3,3,17], dim = 0)
-            pose, pose_dist = torch.split(grid, [3,20], dim = 0)
+            # #grid, pose, pose_dist = torch.split(grid, [3,3,17], dim = 0)
+            # pose, pose_dist = torch.split(grid, [3,20], dim = 0)
             
-            ##如果controlnet有給原圖才需要
+            # ##如果controlnet有給原圖才需要
+            # # import torchvision.transforms as transforms
+            # # mean = (0.5, 0.5, 0.5)
+            # # std = (0.5, 0.5, 0.5)
+            # # m = -0.5/0.5
+            # # s = 1.0/0.5
+            # # denorm = transforms.Normalize((m, m, m),
+            # #                             (s, s, s))
+            # # #denorm = transforms.Normalize((-mean/std).tolist(), (1.0/std).tolist())
+            
+            
+            # # grid = denorm(grid)
+            
             # import torchvision.transforms as transforms
-            # mean = (0.5, 0.5, 0.5)
-            # std = (0.5, 0.5, 0.5)
-            # m = -0.5/0.5
-            # s = 1.0/0.5
-            # denorm = transforms.Normalize((m, m, m),
-            #                             (s, s, s))
-            # #denorm = transforms.Normalize((-mean/std).tolist(), (1.0/std).tolist())
-            
-            
-            # grid = denorm(grid)
+            # mean = torch.tensor([0.5, 0.5, 0.5], dtype=torch.float32)
+            # std = torch.tensor([0.5, 0.5, 0.5], dtype=torch.float32)
+            # denorm = transforms.Normalize(mean=[-m / s for m, s in zip(mean, std)],
+            #                                 std=[1.0 / s for s in std])
+            # pose = denorm(pose)
+            # # grid = pose
+            # grids = [grid, pose]
+            grid, pose, pose_dist = torch.split(grid, [3,3,17], dim = 0)
             
             import torchvision.transforms as transforms
             mean = torch.tensor([0.5, 0.5, 0.5], dtype=torch.float32)
             std = torch.tensor([0.5, 0.5, 0.5], dtype=torch.float32)
             denorm = transforms.Normalize(mean=[-m / s for m, s in zip(mean, std)],
                                             std=[1.0 / s for s in std])
-            pose = denorm(pose)
-            grid = pose
-            # grids = [grid, pose]
-
-            # for idx, grid in enumerate(grids):
-            #     grid = grid.transpose(0, 1).transpose(1, 2).squeeze(-1)
-            #     grid = grid.numpy()
-            #     grid = (grid * 255).astype(np.uint8)
-            #     filename = "{}_gs-{:06}_e-{:06}_b-{:06}.png".format(k, global_step, current_epoch, batch_idx)
-            #     path = os.path.join(root,"pose_" + filename)
-            #     # if idx == 0:
-            #     #     path = os.path.join(root, filename)
-            #     # else:
-            #     #     path = os.path.join(root,"pose_" + filename)
-
-            grid = grid.transpose(0, 1).transpose(1, 2).squeeze(-1)
-            grid = grid.numpy()
-            grid = (grid * 255).astype(np.uint8)
-            filename = "{}_gs-{:06}_e-{:06}_b-{:06}.png".format(k, global_step, current_epoch, batch_idx)
-            path = os.path.join(root, "pose_" + filename)
-            os.makedirs(os.path.split(path)[0], exist_ok=True)
+            grid = denorm(grid)
             
-            Image.fromarray(grid).save(path)
+            # import torchvision.transforms as transforms
+            # mean = torch.tensor([0.5, 0.5, 0.5], dtype=torch.float32)
+            # std = torch.tensor([0.5, 0.5, 0.5], dtype=torch.float32)
+            # denorm = transforms.Normalize(mean=[-m / s for m, s in zip(mean, std)],
+            #                                 std=[1.0 / s for s in std])
+            # pose = denorm(pose)
+            
+            grids = [grid, pose]
+
+            for idx, grid in enumerate(grids):
+                grid = grid.transpose(0, 1).transpose(1, 2).squeeze(-1)
+                grid = grid.numpy()
+                grid = (grid * 255).astype(np.uint8)
+                filename = "{}_gs-{:06}_e-{:06}_b-{:06}.png".format(k, global_step, current_epoch, batch_idx)
+                path = os.path.join(root,"pose_" + filename)
+                if idx == 0:
+                    path = os.path.join(root, filename)
+                else:
+                    path = os.path.join(root,"pose_" + filename)
+
+                os.makedirs(os.path.split(path)[0], exist_ok=True)
+            
+                Image.fromarray(grid).save(path)
+
+            # grid = grid.transpose(0, 1).transpose(1, 2).squeeze(-1)
+            # grid = grid.numpy()
+            # grid = (grid * 255).astype(np.uint8)
+            # filename = "{}_gs-{:06}_e-{:06}_b-{:06}.png".format(k, global_step, current_epoch, batch_idx)
+            # path = os.path.join(root, "pose_" + filename)
+            # os.makedirs(os.path.split(path)[0], exist_ok=True)
+            
+            # Image.fromarray(grid).save(path)
         else:    
             grid = grid.transpose(0, 1).transpose(1, 2).squeeze(-1)
             grid = grid.numpy()
@@ -86,9 +107,9 @@ def log_local(save_dir, split, images, global_step, current_epoch, batch_idx):
             Image.fromarray(grid).save(path)
 
 
-debugpy.listen(("0.0.0.0", 7777))
-print("Waiting for client to attach...")
-debugpy.wait_for_client()
+# debugpy.listen(("0.0.0.0", 7777))
+# print("Waiting for client to attach...")
+# debugpy.wait_for_client()
 
 
 parser = argparse.ArgumentParser(description='help')
@@ -107,8 +128,8 @@ DataConf.data.val.batch_size = batch_size
 
 val_dataset, train_dataset = deepfashion_data.get_train_val_dataloader(DataConf.data, labels_required = True, distributed = False)
 
-model = create_model('./models/idea1_2.yaml').cpu()
-model.load_state_dict(load_state_dict('./checkpoint_for_idea1_2__controlNet_fixResidual/new_exp_sd21_epoch=80_step=249000.ckpt', location='cpu'))
+model = create_model('./models/idea4.yaml').cpu()
+model.load_state_dict(load_state_dict('./checkpoint_for_idea4_all/new_exp_sd21_epoch=167_step=516000.ckpt', location='cpu'))
 model = model.cuda()
 ddim_sampler = DDIMSampler(model)
 
@@ -129,7 +150,7 @@ for x in val_dataset:
             images[k] = images[k].detach().cpu()
             images[k] = torch.clamp(images[k], -1., 1.)
 
-    name = "idea1_2__controlNet_fixResidual"
+    name = "idea4_all"
     log_local("", "train/inferenceLog_" + name, images,
                 0, 0, index)
     index += 1
