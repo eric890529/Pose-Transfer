@@ -42,9 +42,7 @@ DataConf.data.val.batch_size = batch_size
 
 val_dataset, train_dataset = deepfashion_data.get_train_val_dataloader(DataConf.data, labels_required = True, distributed = False)
 
-ckpt_list = ["new_exp_sd21_epoch=171_step=636000.ckpt", "new_exp_sd21_epoch=170_step=630000.ckpt", 
-             "new_exp_sd21_epoch=168_step=624000.ckpt", "new_exp_sd21_epoch=166_step=618000.ckpt", "new_exp_sd21_epoch=165_step=612000.ckpt", 
-             "new_exp_sd21_epoch=163_step=606000.ckpt", "new_exp_sd21_epoch=162_step=600000.ckpt" "new_exp_sd21_epoch=160_step=594000.ckpt"]
+ckpt_list = ["new_exp_sd21_epoch=200_step=744000.ckpt"]
 
 path = "/workspace/ControlNet_idea1_2/checkpoint_for_idea4_all_attnFliter"
 dir_list = os.listdir(path)
