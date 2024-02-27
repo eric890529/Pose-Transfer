@@ -426,8 +426,11 @@ class DDPM(pl.LightningModule):
         x = batch[k]
         
         if not is_inference:
+            batch['target_image'] = torch.cat([batch['target_image'], batch['target_skeleton']],1)
+            batch['source_image'] = torch.cat([batch['source_image'], batch['source_skeleton']],1)
             x = torch.cat([batch['target_image'], batch['source_image']], 0)
         
+
         if len(x.shape) == 3:
             x = x[..., None]
         # x = rearrange(x, 'b h w c -> b c h w')

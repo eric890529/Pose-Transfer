@@ -378,26 +378,28 @@ class ControlLDM(LatentDiffusion):
     def get_input(self, batch, k, bs=None, is_inference=False, *args, **kwargs):
         x, c = super().get_input(batch, self.first_stage_key, is_inference=is_inference, *args, **kwargs)#抓到 latent code of x
         #control = batch[self.control_key] #抓到condition的圖片
+
         if not is_inference:
-            control = torch.cat([batch['source_image'], batch['target_image']], 0)
-            style_img = control
+            style_img = torch.cat([batch['source_image'], batch['target_image']], 0)
+            # style_img = control
             ## 這裡做pose跟圖片concat?? pose也要經過encoder? 還是concat完再進入encoder?
-            pose = torch.cat([batch['target_skeleton'], batch['source_skeleton']], 0)
+            # pose = torch.cat([batch['target_skeleton'], batch['source_skeleton']], 0)
             #control = torch.cat([control,pose] , dim=1) # 再看看要pose就好 還是全部都要一起餵入
         else:
-            control = batch['source_image']
-            style_img = control
+            style_img = batch['source_image']
+            # style_img = control
             ## 這裡做pose跟圖片concat?? pose也要經過encoder? 還是concat完再進入encoder?
-            pose = batch['target_skeleton']
-        control = torch.cat([control,pose] , dim=1)
+            # pose = batch['target_skeleton']
+        # control = torch.cat([control,pose] , dim=1)
         
         
-        if bs is not None:
-            control = control[:bs]
-        control = control.to(self.device)
-        #control = einops.rearrange(control, 'b h w c -> b c h w')
-        control = control.to(memory_format=torch.contiguous_format).float()
-        return x, dict(c_crossattn=[c], c_concat=[control], c_style = [style_img])
+        # if bs is not None:
+        #     control = control[:bs]
+        # control = control.to(self.device)
+        # #control = einops.rearrange(control, 'b h w c -> b c h w')
+        # control = control.to(memory_format=torch.contiguous_format).float()
+
+        return x, dict(c_crossattn=[c], c_concat=[None], c_style = [style_img])
         #return x, dict(c_concat=[control])
 
     def apply_model(self, x_noisy, t, cond, *args, **kwargs):
@@ -459,10 +461,10 @@ class ControlLDM(LatentDiffusion):
                 
             # control = self.control_model(x=x_noisy, hint=tmp, timesteps=t, context=cond_txt)
             
-            control = self.control_model(x=x_noisy, hint = controlPose, timesteps=t, cond_style = cond_style)
-            control = [c * scale for c, scale in zip(control, self.control_scales)]
+            # control = self.control_model(x=x_noisy, hint = controlPose, timesteps=t, cond_style = cond_style)
+            # control = [c * scale for c, scale in zip(control, self.control_scales)]
             
-            # control = None
+            control = None
             #eps = diffusion_model(x=x_noisy, timesteps=t, context=cond_txt, control=control, only_mid_control=self.only_mid_control)
             eps = diffusion_model(x=x_noisy, timesteps=t, control=control, only_mid_control=self.only_mid_control, cond_style = cond_style) # , style_encoder = style_encoder
 
@@ -569,12 +571,16 @@ class ControlLDM(LatentDiffusion):
             self.set_optim_lr(self.optimizers(), 1e-6)
         if self.current_epoch > 60:
             self.set_optim_lr(self.optimizers(), 5e-7)
+        if self.current_epoch > 90:    
+            self.set_optim_lr(self.optimizers(), 2.5e-7)
 
     def on_train_epoch_end(self):
         if self.current_epoch > 40:
             self.set_optim_lr(self.optimizers(), 1e-6)
         if self.current_epoch > 60:
             self.set_optim_lr(self.optimizers(), 5e-7)
+        if self.current_epoch > 90:    
+            self.set_optim_lr(self.optimizers(), 2.5e-7)
             
     def set_optim_lr( self, optim, lr ) :
         for param in optim.param_groups :
