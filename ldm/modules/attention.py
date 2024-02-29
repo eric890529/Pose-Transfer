@@ -353,6 +353,7 @@ class SpatialTransformer(nn.Module):
             x = self.proj_in(x)
         for i, block in enumerate(self.transformer_blocks):
             # context = clip(x)
+            ## context也要做轉換 因為現在context是圖片了
             context = rearrange(context, 'b c h w -> b (h w) c').contiguous()
             x = block(x, context)
             # x = block(x)

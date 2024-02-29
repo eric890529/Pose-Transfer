@@ -18,6 +18,7 @@ from ldm.models.diffusion.ddpm import LatentDiffusion
 from ldm.util import log_txt_as_img, exists, instantiate_from_config
 from ldm.models.diffusion.ddim import DDIMSampler
 from transformers import CLIPVisionModel
+import torch.nn.functional as F
 
 class ControlledUnetModel(UNetModel):
     def forward(self, x, timesteps=None, context=None, control=None, only_mid_control=False, cond_style = False, **kwargs):
@@ -381,25 +382,30 @@ class ControlLDM(LatentDiffusion):
 
         if not is_inference:
             style_img = torch.cat([batch['source_image'], batch['target_image']], 0)
+
+            pose = torch.cat([batch["target_skeleton"], batch["source_skeleton"]], 0)
             # style_img = control
             ## 這裡做pose跟圖片concat?? pose也要經過encoder? 還是concat完再進入encoder?
             # pose = torch.cat([batch['target_skeleton'], batch['source_skeleton']], 0)
             #control = torch.cat([control,pose] , dim=1) # 再看看要pose就好 還是全部都要一起餵入
         else:
             style_img = batch['source_image']
+
+            pose =  batch["target_skeleton"]
             # style_img = control
             ## 這裡做pose跟圖片concat?? pose也要經過encoder? 還是concat完再進入encoder?
             # pose = batch['target_skeleton']
         # control = torch.cat([control,pose] , dim=1)
         
         
+
         # if bs is not None:
         #     control = control[:bs]
         # control = control.to(self.device)
         # #control = einops.rearrange(control, 'b h w c -> b c h w')
         # control = control.to(memory_format=torch.contiguous_format).float()
 
-        return x, dict(c_crossattn=[c], c_concat=[None], c_style = [style_img])
+        return x, dict(c_crossattn=[c], c_concat=[pose], c_style = [style_img])
         #return x, dict(c_concat=[control])
 
     def apply_model(self, x_noisy, t, cond, *args, **kwargs):
@@ -426,14 +432,22 @@ class ControlLDM(LatentDiffusion):
         # torch_resize = Resize([32,32])
         # cond['c_style'][0] = torch_resize(cond['c_style'][0])
         # cond_style = self.style_encoder(cond['c_style'][0])
+
+        ##這裡concat pose
+        ##latent跟pose做concat
+        pose = cond["c_concat"][0]
+        _, _, h, w = x_noisy.shape
+        ##latent跟pose做concat
+        pose = F.interpolate(pose, (h,w))
+        x_noisy = torch.cat([x_noisy,pose],1)
         
         encoder_posterior = self.encode_first_stage(cond['c_style'][0].to("cuda"))
         z_style = self.get_first_stage_encoding(encoder_posterior).detach() # latent code
         cond_style = self.style_encoder(z_style)
         
-        # Get CLIP embeddings
-        controlInput = torch.cat(cond['c_concat'], 1)
-        controlStyle, controlPose = torch.split(controlInput, [3,20], dim = 1) #可以check是否跟c_style一樣
+        # # Get CLIP embeddings
+        # controlInput = torch.cat(cond['c_concat'], 1)
+        # controlStyle, controlPose = torch.split(controlInput, [3,20], dim = 1) #可以check是否跟c_style一樣
         # inputs = {"pixel_values": torch_resize(controlStyle).to(self.device)}
         # clip_hidden_states =  self.clip_encoder(**inputs).last_hidden_state.to(self.device)
         
@@ -491,6 +505,7 @@ class ControlLDM(LatentDiffusion):
         n_row = min(z.shape[0], n_row)
         log["reconstruction"] = self.decode_first_stage(z)
         log["control"] = c_cat #* 2.0 - 1.0
+        log["style"] = c_style #* 2.0 - 1.0
         #log["conditioning"] = log_txt_as_img((512, 512), batch[self.cond_stage_key], size=16)
 
         if plot_diffusion_rows:
@@ -557,7 +572,7 @@ class ControlLDM(LatentDiffusion):
 
     def configure_optimizers(self):
         lr = self.learning_rate
-        params = list(self.control_model.parameters() )+ list(self.style_encoder.parameters())   + list(self.model.diffusion_model.parameters())
+        params =  list(self.style_encoder.parameters())   + list(self.model.diffusion_model.parameters()) # list(self.control_model.parameters() )0
               # #list(self.first_stage_model.parameters()) +  list(self.adapter.parameters())
         if not self.sd_locked:
             params += list(self.model.parameters())

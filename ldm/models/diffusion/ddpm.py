@@ -27,6 +27,8 @@ from ldm.models.autoencoder import IdentityFirstStage, AutoencoderKL
 from ldm.modules.diffusionmodules.util import make_beta_schedule, extract_into_tensor, noise_like
 from ldm.models.diffusion.ddim import DDIMSampler
 
+import torch.nn.functional as F
+
 
 __conditioning_keys__ = {'concat': 'c_concat',
                          'crossattn': 'c_crossattn',
@@ -426,8 +428,6 @@ class DDPM(pl.LightningModule):
         x = batch[k]
         
         if not is_inference:
-            batch['target_image'] = torch.cat([batch['target_image'], batch['target_skeleton']],1)
-            batch['source_image'] = torch.cat([batch['source_image'], batch['source_skeleton']],1)
             x = torch.cat([batch['target_image'], batch['source_image']], 0)
         
 
@@ -858,6 +858,9 @@ class LatentDiffusion(DDPM):
         #z = self.get_first_stage_encoding(encoder_posterior).detach()# latent code
         z = self.get_first_stage_encoding(encoder_posterior)
 
+        
+
+
         if self.model.conditioning_key is not None and not self.force_null_conditioning:
             if cond_key is None:
                 cond_key = self.cond_stage_key
@@ -974,6 +977,7 @@ class LatentDiffusion(DDPM):
     def p_losses(self, x_start, cond, t, noise=None):
         noise = default(noise, lambda: torch.randn_like(x_start))
         x_noisy = self.q_sample(x_start=x_start, t=t, noise=noise)
+
         model_output = self.apply_model(x_noisy, t, cond)
 
         loss_dict = {}
@@ -1009,7 +1013,7 @@ class LatentDiffusion(DDPM):
         #     self.step_curve.append(self.global_step)
         #     self.losses_curve.append(loss.data.cpu().numpy())
         #     self.draw_loss_curve(self.losses_curve,self.step_curve)
-        if self.global_step % 500 == 0: ##1000/4 accmulate gradient
+        if self.global_step % 3084 == 0: ##1000/4 accmulate gradient
             if len(self.losses_curve) == 0:
                 self.losses_curve.append(loss.data.cpu().numpy())
             elif self.global_step not in step_record:
@@ -1036,8 +1040,8 @@ class LatentDiffusion(DDPM):
         plt.ylabel('loss')
         plt.xlabel('global_step')
         plt.legend()    
-        index = 5
-        filename = "idea4_all" + str(index) + ".jpg"
+        index = 1
+        filename = "idea4_noControlNet" + str(index) + ".jpg"
         plt.savefig(os.path.join('lossCurve', filename))
     
 

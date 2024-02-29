@@ -33,14 +33,14 @@ class ImageLogger(Callback):
                 if k != 'control':
                     grid = (grid + 1.0) / 2.0  # -1,1 -> 0,1; c,h,w
             if k == 'control':
-                grid, pose, pose_dist = torch.split(grid, [3,3,17], dim = 0)
+                pose, pose_dist = torch.split(grid, [3,17], dim = 0)
                 
-                import torchvision.transforms as transforms
-                mean = torch.tensor([0.5, 0.5, 0.5], dtype=torch.float32)
-                std = torch.tensor([0.5, 0.5, 0.5], dtype=torch.float32)
-                denorm = transforms.Normalize(mean=[-m / s for m, s in zip(mean, std)],
-                                                std=[1.0 / s for s in std])
-                grid = denorm(grid)
+                # import torchvision.transforms as transforms
+                # mean = torch.tensor([0.5, 0.5, 0.5], dtype=torch.float32)
+                # std = torch.tensor([0.5, 0.5, 0.5], dtype=torch.float32)
+                # denorm = transforms.Normalize(mean=[-m / s for m, s in zip(mean, std)],
+                #                                 std=[1.0 / s for s in std])
+                # pose = denorm(pose)
                 
                 # import torchvision.transforms as transforms
                 # mean = torch.tensor([0.5, 0.5, 0.5], dtype=torch.float32)
@@ -51,19 +51,25 @@ class ImageLogger(Callback):
                 
                 grids = [grid, pose]
 
-                for idx, grid in enumerate(grids):
-                    grid = grid.transpose(0, 1).transpose(1, 2).squeeze(-1)
-                    grid = grid.numpy()
-                    grid = (grid * 255).astype(np.uint8)
-                    filename = "{}_gs-{:06}_e-{:06}_b-{:06}.png".format(k, global_step, current_epoch, batch_idx)
-                    if idx == 0:
-                        path = os.path.join(root, filename)
-                    else:
-                        path = os.path.join(root,"pose_" + filename)
+                # for idx, grid in enumerate(grids):
+                #     grid = grid.transpose(0, 1).transpose(1, 2).squeeze(-1)
+                #     grid = grid.numpy()
+                #     grid = (grid * 255).astype(np.uint8)
+                #     filename = "{}_gs-{:06}_e-{:06}_b-{:06}.png".format(k, global_step, current_epoch, batch_idx)
+                #     if idx == 0:
+                #         path = os.path.join(root, filename)
+                #     else:
+                #         path = os.path.join(root,"pose_" + filename)
+                
+                pose = pose.transpose(0, 1).transpose(1, 2).squeeze(-1)
+                pose = pose.numpy()
+                pose = (pose * 255).astype(np.uint8)
+                filename = "{}_gs-{:06}_e-{:06}_b-{:06}.png".format(k, global_step, current_epoch, batch_idx)
+                path = os.path.join(root,"pose_" + filename)
 
-                    os.makedirs(os.path.split(path)[0], exist_ok=True)
-                    
-                    Image.fromarray(grid).save(path)
+                os.makedirs(os.path.split(path)[0], exist_ok=True)
+                
+                Image.fromarray(pose).save(path)
             else:    
                 grid = grid.transpose(0, 1).transpose(1, 2).squeeze(-1)
                 grid = grid.numpy()
@@ -109,4 +115,4 @@ class ImageLogger(Callback):
 
     def on_train_batch_end(self, trainer, pl_module, outputs, batch, batch_idx):
         if not self.disabled:
-            self.log_img(pl_module, batch, batch_idx, split="train/idea1_2_for_idea4_all")
+            self.log_img(pl_module, batch, batch_idx, split="train/idea1_2_for_idea4_noControlNet")
