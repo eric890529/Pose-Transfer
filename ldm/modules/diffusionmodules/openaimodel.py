@@ -215,6 +215,7 @@ class ResBlock(TimestepBlock):
 
         ##aff fuse
         self.aff_fuse = AFF(self.out_channels)
+        self.relu = nn.ReLU(inplace=True)
 
         
         self.in_layers = nn.Sequential(
@@ -297,7 +298,9 @@ class ResBlock(TimestepBlock):
             h = self.out_layers(h)
 
         if self.use_style_condition:
-            return self.aff_fuse(h, self.skip_connection(x))
+            out = self.aff_fuse(h, self.skip_connection(x))
+            out = self.relu(out)
+            return out
         
         return self.skip_connection(x) + h     
 
