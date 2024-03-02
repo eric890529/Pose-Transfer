@@ -212,6 +212,10 @@ class ResBlock(TimestepBlock):
         ##
         self.use_style_condition = use_style_condition
         ##
+
+        ##aff fuse
+        self.aff_fuse = AFF(self.out_channels)
+
         
         self.in_layers = nn.Sequential(
             normalization(channels),
@@ -273,6 +277,7 @@ class ResBlock(TimestepBlock):
             emb_out = self.emb_layers(emb).type(h.dtype) ##?????
         
         
+        
         ##
         #emb_out = self.emb_layers(emb).type(h.dtype)
         if emb_out is not None:
@@ -290,7 +295,49 @@ class ResBlock(TimestepBlock):
             else:
                 h = h 
             h = self.out_layers(h)
-        return self.skip_connection(x) + h       
+
+        if self.use_style_condition:
+            return self.aff_fuse(h, self.skip_connection(x))
+        
+        return self.skip_connection(x) + h     
+
+class AFF(nn.Module):
+    '''
+    多特征融合 AFF
+    '''
+
+    def __init__(self, channels=64, r=4):
+        super(AFF, self).__init__()
+        inter_channels = int(channels // r)
+
+        self.local_att = nn.Sequential(
+            nn.Conv2d(channels, inter_channels, kernel_size=1, stride=1, padding=0),
+            nn.BatchNorm2d(inter_channels),
+            nn.ReLU(inplace=True),
+            nn.Conv2d(inter_channels, channels, kernel_size=1, stride=1, padding=0),
+            nn.BatchNorm2d(channels),
+        )
+
+        self.global_att = nn.Sequential(
+            nn.AdaptiveAvgPool2d(1),
+            nn.Conv2d(channels, inter_channels, kernel_size=1, stride=1, padding=0),
+            nn.BatchNorm2d(inter_channels),
+            nn.ReLU(inplace=True),
+            nn.Conv2d(inter_channels, channels, kernel_size=1, stride=1, padding=0),
+            nn.BatchNorm2d(channels),
+        )
+
+        self.sigmoid = nn.Sigmoid()
+
+    def forward(self, x, residual):
+        xa = x + residual
+        xl = self.local_att(xa)
+        xg = self.global_att(xa)
+        xlg = xl + xg
+        wei = self.sigmoid(xlg)
+
+        xo = 2 * x * wei + 2 * residual * (1 - wei)
+        return xo  
         
 
     # def forward(self, x, emb=None):
