@@ -40,7 +40,7 @@ val_dataset, train_dataset = deepfashion_data.get_train_val_dataloader(DataConf.
 
 # Configs
 resume_path = './models/idea4NoControlNet.ckpt'
-resume_path = './checkpoint_for_idea4_all_noControlNet/new_exp_sd21_epoch=87_step=270000.ckpt'
+resume_path = './checkpoint_for_idea4_all_noControlNet/new_exp_sd21_epoch=150_step=462000.ckpt'
 #batch_size = 2
 logger_freq = 3000
 learning_rate = 1e-5
