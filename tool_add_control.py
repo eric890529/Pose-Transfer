@@ -69,9 +69,9 @@ from cldm.model import create_model
 
 import debugpy
 
-debugpy.listen(("0.0.0.0", 7777))
-print("Waiting for client to attach...")
-debugpy.wait_for_client()
+# debugpy.listen(("0.0.0.0", 7777))
+# print("Waiting for client to attach...")
+# debugpy.wait_for_client()
 
 def get_node_name(name, parent_name):
     if len(name) <= len(parent_name):
@@ -122,5 +122,5 @@ for k in scratch_dict.keys():
         print(f'These weights are newly added: {k}')
 
 model.load_state_dict(target_dict, strict=True)
-torch.save(model.state_dict(), output_path)
+# torch.save(model.state_dict(), output_path)
 print('Done.')

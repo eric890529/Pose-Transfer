@@ -26,7 +26,7 @@ import argparse
 parser = argparse.ArgumentParser(description='help')
 parser.add_argument('--dataset_path', type=str, default='/workspace/dataset/dataset/deepfashion')
 parser.add_argument('--DataConfigPath', type=str, default='./dataConfig/data.yaml')
-parser.add_argument('--batch_size', type=int, default=10)
+parser.add_argument('--batch_size', type=int, default=2)
 
 args = parser.parse_args()
 
@@ -38,7 +38,7 @@ DataConf.data.train.batch_size = args.batch_size//2  #src -> tgt , tgt -> src
 val_dataset, train_dataset = deepfashion_data.get_train_val_dataloader(DataConf.data, labels_required = True, distributed = False)
 
 # Configs
-resume_path = './models/idea4_attnFliter.ckpt'
+resume_path = './models/idea4_aff.ckpt'
 # resume_path = './checkpoint_for_idea4_all/new_exp_sd21_epoch=40_step=126000.ckpt'
 #batch_size = 2
 logger_freq = 1000
@@ -48,7 +48,7 @@ only_mid_control = False
 
 
 # First use cpu to load models. Pytorch Lightning will automatically move it to GPUs.
-model = create_model('./models/idea4_attnFliter.yaml').cpu()
+model = create_model('./models/idea4_aff.yaml').cpu()
 
 
 # import torch.nn as nn
