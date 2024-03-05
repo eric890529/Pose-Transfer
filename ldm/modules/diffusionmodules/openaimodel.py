@@ -214,8 +214,9 @@ class ResBlock(TimestepBlock):
         ##
 
         ##aff fuse
-        self.aff_fuse = AFF(self.out_channels)
-        self.relu = nn.ReLU(inplace=True)
+        if use_style_condition:
+            self.aff_fuse = AFF(self.out_channels)
+            self.relu = nn.ReLU(inplace=True)
 
         
         self.in_layers = nn.Sequential(

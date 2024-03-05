@@ -86,7 +86,7 @@ if 'state_dict' in vae_pretrained_weights:
     vae_pretrained_weights = vae_pretrained_weights['state_dict']
     
 # model = create_model(config_path='./models/idea1_2.yaml')
-model = create_model(config_path='./models/idea4.yaml')
+model = create_model(config_path='./models/idea4_aff.yaml')
 
 pretrained_weights = torch.load(input_path)
 if 'state_dict' in pretrained_weights:

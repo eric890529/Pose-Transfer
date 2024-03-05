@@ -26,7 +26,7 @@ import argparse
 parser = argparse.ArgumentParser(description='help')
 parser.add_argument('--dataset_path', type=str, default='/workspace/dataset/dataset/deepfashion')
 parser.add_argument('--DataConfigPath', type=str, default='./dataConfig/data.yaml')
-parser.add_argument('--batch_size', type=int, default=12)
+parser.add_argument('--batch_size', type=int, default=10)
 
 args = parser.parse_args()
 
@@ -38,8 +38,8 @@ DataConf.data.train.batch_size = args.batch_size//2  #src -> tgt , tgt -> src
 val_dataset, train_dataset = deepfashion_data.get_train_val_dataloader(DataConf.data, labels_required = True, distributed = False)
 
 # Configs
-resume_path = './models/idea4_VAE.ckpt'
-resume_path = './checkpoint_for_idea4_all/new_exp_sd21_epoch=40_step=126000.ckpt'
+resume_path = './models/idea4_attnFliter.ckpt'
+# resume_path = './checkpoint_for_idea4_all/new_exp_sd21_epoch=40_step=126000.ckpt'
 #batch_size = 2
 logger_freq = 1000
 learning_rate = 1e-5
@@ -48,7 +48,7 @@ only_mid_control = False
 
 
 # First use cpu to load models. Pytorch Lightning will automatically move it to GPUs.
-model = create_model('./models/idea4.yaml').cpu()
+model = create_model('./models/idea4_attnFliter.yaml').cpu()
 
 
 # import torch.nn as nn
@@ -86,13 +86,13 @@ model.only_mid_control = only_mid_control
 from pytorch_lightning.callbacks import ModelCheckpoint
 
 import os
-directory = "checkpoint_for_idea4_all"
+directory = "checkpoint_for_idea4_aff"
 if not os.path.exists(directory):
     os.makedirs(directory)
 acc_size = 2
 checkpoint_callback = ModelCheckpoint(dirpath = directory,
                                       save_top_k = -1,
-                                      every_n_train_steps=3000/acc_size, save_last=True, #4000/1000
+                                      every_n_train_steps=9000/acc_size, save_last=True, #4000/1000
                                       save_weights_only=False,
                                       filename='new_exp_sd21_{epoch:02d}_{step:06d}')
 
@@ -100,7 +100,7 @@ checkpoint_callback = ModelCheckpoint(dirpath = directory,
 # dataset = MyDataset()
 # dataloader = DataLoader(dataset, num_workers=0, batch_size=batch_size, shuffle=True)
 logger = ImageLogger(batch_frequency=logger_freq)
-trainer = pl.Trainer(gpus=1, precision=32, callbacks=[logger, checkpoint_callback], accumulate_grad_batches=acc_size, resume_from_checkpoint = resume_path)# , resume_from_checkpoint = './checkpoint/last.ckpt' , resume_from_checkpoint = './checkpoint_for_diffusion/last.ckpt'
+trainer = pl.Trainer(gpus=1, precision=32, callbacks=[logger, checkpoint_callback], accumulate_grad_batches=acc_size)# , resume_from_checkpoint = './checkpoint/last.ckpt' , resume_from_checkpoint = './checkpoint_for_diffusion/last.ckpt'
 #, resume_from_checkpoint = resume_path
 # Train!
 trainer.fit(model, train_dataset)
