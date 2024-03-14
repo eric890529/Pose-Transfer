@@ -42,8 +42,13 @@ DataConf.data.val.batch_size = batch_size
 
 val_dataset, train_dataset = deepfashion_data.get_train_val_dataloader(DataConf.data, labels_required = True, distributed = False)
 
-model = create_model('./models/idea1_2.yaml').cpu()
-model.load_state_dict(load_state_dict('./checkpoint_for_idea1_2__controlNet_fixResidual/new_exp_sd21_epoch=89_step=276000.ckpt', location='cpu'))
+# ## opt gpu
+# import os 
+# os.environ['CUDA_VISIBLE_DEVICES'] = "1"
+# torch.cuda.set_device(1)
+
+model = create_model('./models/idea4.yaml').cpu()
+model.load_state_dict(load_state_dict('./checkpoint_for_idea4_aff/new_exp_sd21_epoch=161_step=598500.ckpt', location='cpu'))
 model = model.cuda()
 model.eval()
 ddim_sampler = DDIMSampler(model)
@@ -84,12 +89,12 @@ for x in val_dataset:
         x_samples = (einops.rearrange(x_samples, 'b c h w -> b h w c') * 127.5 + 127.5).cpu().numpy().clip(0, 255).astype(np.uint8)
 
         results = [x_samples[i] for i in range(batch_size)]
-        path = './inferenceValDataset_idea1_2__controlNet_fixResidual'
+        path = './inferenceValDataset_idea4_aff'
         if not os.path.exists(path):
             os.makedirs(path)
         index = 0
         for result in results:
-            path = './inferenceValDataset_idea1_2__controlNet_fixResidual'
+            path = './inferenceValDataset_idea4_aff'
             path = path + '/' + x["path"][index]
             Image.fromarray(result).save(path)
             index += 1
