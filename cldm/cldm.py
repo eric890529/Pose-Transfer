@@ -435,7 +435,7 @@ class ControlLDM(LatentDiffusion):
 
         ##這裡concat pose
         ##latent跟pose做concat
-        pose = cond["c_concat"][0]
+        pose = cond["c_concat"][0].to("cuda")
         _, _, h, w = x_noisy.shape
         ##latent跟pose做concat
         pose = F.interpolate(pose, (h,w))
