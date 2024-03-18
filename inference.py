@@ -129,7 +129,7 @@ DataConf.data.val.batch_size = batch_size
 val_dataset, train_dataset = deepfashion_data.get_train_val_dataloader(DataConf.data, labels_required = True, distributed = False)
 
 model = create_model('./models/idea4.yaml').cpu()
-model.load_state_dict(load_state_dict('./checkpoint_for_idea4_all/new_exp_sd21_epoch=167_step=516000.ckpt', location='cpu'))
+model.load_state_dict(load_state_dict('./checkpoint_for_idea4_aff/new_exp_sd21_epoch=161_step=598500.ckpt', location='cpu'))
 model = model.cuda()
 ddim_sampler = DDIMSampler(model)
 
@@ -150,7 +150,7 @@ for x in val_dataset:
             images[k] = images[k].detach().cpu()
             images[k] = torch.clamp(images[k], -1., 1.)
 
-    name = "idea4_all"
+    name = "idea4_aff"
     log_local("", "train/inferenceLog_" + name, images,
                 0, 0, index)
     index += 1
