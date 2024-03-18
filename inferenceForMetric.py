@@ -42,7 +42,7 @@ DataConf.data.val.batch_size = batch_size
 
 val_dataset, train_dataset = deepfashion_data.get_train_val_dataloader(DataConf.data, labels_required = True, distributed = False)
 
-ckpt_list = [ "new_exp_sd21_epoch=200_step=618000.ckpt"]
+ckpt_list = [ "/new_exp_sd21_epoch=200_step=618000.ckpt"]
 
 ## opt gpu
 import os 
