@@ -300,7 +300,7 @@ class ResBlock(TimestepBlock):
 
         if self.use_style_condition:
             out = self.aff_fuse(h, self.skip_connection(x))
-            out = self.relu(out)
+            # out = self.relu(out)
             return out
         
         return self.skip_connection(x) + h     

@@ -39,7 +39,7 @@ val_dataset, train_dataset = deepfashion_data.get_train_val_dataloader(DataConf.
 
 # Configs
 resume_path = './models/idea4_aff.ckpt'
-resume_path = './checkpoint_for_idea4_aff/new_exp_sd21_epoch=91_step=337500.ckpt'
+resume_path = './checkpoint_for_idea4_aff_fix/new_exp_sd21_epoch=80_step=297000.ckpt'
 #batch_size = 2
 logger_freq = 3000
 learning_rate = 1e-5
@@ -86,7 +86,7 @@ model.only_mid_control = only_mid_control
 from pytorch_lightning.callbacks import ModelCheckpoint
 
 import os
-directory = "checkpoint_for_idea4_aff"
+directory = "checkpoint_for_idea4_aff_fix"
 if not os.path.exists(directory):
     os.makedirs(directory)
 acc_size = 2
@@ -101,7 +101,7 @@ checkpoint_callback = ModelCheckpoint(dirpath = directory,
 # dataloader = DataLoader(dataset, num_workers=0, batch_size=batch_size, shuffle=True)
 logger = ImageLogger(batch_frequency=logger_freq)
 trainer = pl.Trainer(gpus=1, precision=32, callbacks=[logger, checkpoint_callback], accumulate_grad_batches=acc_size
-                     , resume_from_checkpoint = resume_path)# , resume_from_checkpoint = './checkpoint/last.ckpt' , resume_from_checkpoint = './checkpoint_for_diffusion/last.ckpt'
+        , resume_from_checkpoint = resume_path        )# , resume_from_checkpoint = './checkpoint/last.ckpt' , resume_from_checkpoint = './checkpoint_for_diffusion/last.ckpt'
 #, resume_from_checkpoint = resume_path
 # Train!
 trainer.fit(model, train_dataset)
