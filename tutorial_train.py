@@ -17,9 +17,11 @@ from ldm.modules.diffusionmodules.util import (
     timestep_embedding,
 )
 
-# debugpy.listen(("0.0.0.0", 7777))
-# print("Waiting for client to attach...")
-# debugpy.wait_for_client()
+from danceDataset.data_loader import CreateDataLoader
+
+debugpy.listen(("0.0.0.0", 7777))
+print("Waiting for client to attach...")
+debugpy.wait_for_client()
 
 
 import argparse
@@ -37,6 +39,7 @@ DataConf.data.path = args.dataset_path
 DataConf.data.train.batch_size = args.batch_size//2  #src -> tgt , tgt -> src
     
 val_dataset, train_dataset = deepfashion_data.get_train_val_dataloader(DataConf.data, labels_required = True, distributed = False)
+# data_loader = CreateDataLoader(opt)
 
 # Configs
 resume_path = './models/idea4_attnFliter.ckpt'
