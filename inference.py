@@ -86,9 +86,9 @@ def log_local(save_dir, split, images, global_step, current_epoch, batch_idx):
             Image.fromarray(grid).save(path)
 
 
-# debugpy.listen(("0.0.0.0", 7777))
-# print("Waiting for client to attach...")
-# debugpy.wait_for_client()
+debugpy.listen(("0.0.0.0", 7777))
+print("Waiting for client to attach...")
+debugpy.wait_for_client()
 
 
 parser = argparse.ArgumentParser(description='help')
