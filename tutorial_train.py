@@ -46,7 +46,7 @@ resume_path = './checkpoint_for_idea4_all_attnFliter/new_exp_sd21_epoch=200_step
 #batch_size = 2
 logger_freq = 600
 learning_rate = 1e-5
-sd_locked = True
+sd_locked = False #True
 only_mid_control = False
 
 

@@ -555,14 +555,27 @@ class ControlLDM(LatentDiffusion):
 
     def configure_optimizers(self):
         lr = self.learning_rate
-        params = list(self.control_model.parameters() )+ list(self.style_encoder.parameters())   + list(self.model.diffusion_model.parameters())
+        # transform_param = self.extractAttnParam(self.model.diffusion_model.input_blocks)
+        params =  list(self.control_model.parameters() )+ list(self.style_encoder.parameters())  
               # #list(self.first_stage_model.parameters()) +  list(self.adapter.parameters())
+        # for p in transform_param:
+        #     params += list(p)
+
         if not self.sd_locked:
-            params += list(self.model.parameters())
-            # params += list(self.model.diffusion_model.output_blocks.parameters())
-            # params += list(self.model.diffusion_model.out.parameters())
+            # params += list(self.model.parameters())
+            params += list(self.model.diffusion_model.output_blocks.parameters())
+            params += list(self.model.diffusion_model.out.parameters())
         opt = torch.optim.AdamW(params, lr=lr)
         return opt
+    
+    def extractAttnParam(self, model):
+        spatial_transformer_params = []
+        # 遍历模型的所有子模块，并检查它们是否为 SpatialTransformer 的实例
+        for name, module in model.named_modules():
+            if isinstance(module, SpatialTransformer):
+                # 如果是 SpatialTransformer 实例，则将其参数添加到列表中
+                spatial_transformer_params.extend([module.parameters()])
+        return spatial_transformer_params
     
     def on_train_epoch_start(self):
         if self.current_epoch > 40:

@@ -609,10 +609,17 @@ class LatentDiffusion(DDPM):
     @rank_zero_only
     @torch.no_grad()
     def on_train_batch_start(self, batch, batch_idx ):#dataloader_idx
-        #print("start")
+        # print("start")
         # import copy
-        # global old_diffusion_model 
-        # old_diffusion_model = copy.deepcopy(self.model)
+        # global old_encoder_resisual_block
+        # old_encoder_resisual_block = copy.deepcopy(self.model.diffusion_model.input_blocks[1][0])
+        # global old_encoder_attn_block
+        # old_encoder_attn_block = copy.deepcopy(self.model.diffusion_model.input_blocks[1][1])
+        # global old_decoder_resisual_block
+        # old_decoder_resisual_block = copy.deepcopy(self.model.diffusion_model.output_blocks[3][0])
+        # global old_decoder_attn_block
+        # old_decoder_attn_block = copy.deepcopy(self.model.diffusion_model.output_blocks[3][1])
+        # global old_first_stage_model 
         # global old_first_stage_model 
         # old_first_stage_model = copy.deepcopy(self.first_stage_model)
         # global old_cond_stage_model 
@@ -637,11 +644,14 @@ class LatentDiffusion(DDPM):
             print("### USING STD-RESCALING ###")
             
     # def on_train_batch_end(self, *args, **kwargs):
-    #     self.cmp_model(old_diffusion_model, self.model, "self.model")
-        # self.cmp_model(old_first_stage_model, self.first_stage_model, "first_stage_model")
-        # self.cmp_model(old_cond_stage_model, self.cond_stage_model, "cond_stage_model")
-        # self.cmp_model(old_control_model, self.control_model, "control_model")
-        # self.cmp_model(old_style_encoder, self.style_encoder, "style_encoder")
+    #     self.cmp_model(old_encoder_resisual_block, self.model.diffusion_model.input_blocks[1][0], "encoder residual")
+    #     self.cmp_model(old_encoder_attn_block, self.model.diffusion_model.input_blocks[1][1], "encoder attn")
+    #     self.cmp_model(old_decoder_resisual_block, self.model.diffusion_model.output_blocks[3][0], "decoder residual")
+    #     self.cmp_model(old_decoder_attn_block, self.model.diffusion_model.output_blocks[3][1], "decoder attn")
+    #     # self.cmp_model(old_first_stage_model, self.first_stage_model, "first_stage_model")
+    #     # self.cmp_model(old_cond_stage_model, self.cond_stage_model, "cond_stage_model")
+    #     # self.cmp_model(old_control_model, self.control_model, "control_model")
+    #     # self.cmp_model(old_style_encoder, self.style_encoder, "style_encoder")
     #     #print("end")
         
         
