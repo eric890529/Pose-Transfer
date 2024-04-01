@@ -1,0 +1,19 @@
+distributed: False
+
+data:
+    type: danceDataset.fashion_data::Dataset
+    preprocess_mode: resize_and_crop
+    path: /workspace/dataset/dataset/customDataset
+    poseData: /workspace/dataset/dataset/customDataset/poseData
+    num_workers: 8
+    sub_path: 256-256
+    resolution: 256
+    scale_param: 0.05
+    train:
+      batch_size: 8           # real_batch_size: 4 * 2 (source-->target & target --> source) * 2 (GPUs) = 16
+      distributed: False
+    val:
+      batch_size: 8
+      distributed: False
+
+

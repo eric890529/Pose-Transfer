@@ -6,6 +6,7 @@ from tutorial_dataset import MyDataset
 from cldm.logger import ImageLogger
 from cldm.model import create_model, load_state_dict
 import data as deepfashion_data
+import danceDataset as dance_data
 
 from dataConfig.dataconfig import Config as DataConfig
 import debugpy
@@ -17,7 +18,6 @@ from ldm.modules.diffusionmodules.util import (
     timestep_embedding,
 )
 
-from danceDataset.data_loader import CreateDataLoader
 
 debugpy.listen(("0.0.0.0", 7777))
 print("Waiting for client to attach...")
@@ -26,8 +26,8 @@ debugpy.wait_for_client()
 
 import argparse
 parser = argparse.ArgumentParser(description='help')
-parser.add_argument('--dataset_path', type=str, default='/workspace/dataset/dataset/deepfashion')
-parser.add_argument('--DataConfigPath', type=str, default='./dataConfig/data.yaml')
+parser.add_argument('--dataset_path', type=str, default='/workspace/dataset/dataset/customDataset')
+parser.add_argument('--DataConfigPath', type=str, default='./dataConfig/customData.yaml')
 parser.add_argument('--batch_size', type=int, default=10)
 parser.add_argument('--gpu', type=int, default=12)
 
@@ -38,14 +38,13 @@ DataConf.data.path = args.dataset_path
 
 DataConf.data.train.batch_size = args.batch_size//2  #src -> tgt , tgt -> src
     
-val_dataset, train_dataset = deepfashion_data.get_train_val_dataloader(DataConf.data, labels_required = True, distributed = False)
-# data_loader = CreateDataLoader(opt)
+val_dataset, train_dataset = dance_data.get_train_val_dataloader(DataConf.data, labels_required = True, distributed = False)
 
 # Configs
-resume_path = './models/idea4_attnFliter.ckpt'
-# resume_path = './checkpoint_for_idea4_all_attnFliter/new_exp_sd21_epoch=183_step=678000.ckpt'
+# resume_path = './models/idea4_attnFliter.ckpt'
+resume_path = './checkpoint_for_idea4_all_attnFliter/new_exp_sd21_epoch=200_step=744000.ckpt'
 #batch_size = 2
-logger_freq = 4000
+logger_freq = 600
 learning_rate = 1e-5
 sd_locked = True
 only_mid_control = False
@@ -90,7 +89,7 @@ model.only_mid_control = only_mid_control
 from pytorch_lightning.callbacks import ModelCheckpoint
 
 import os
-directory = "checkpoint_for_idea4_all_attnFliter"
+directory = "checkpoint_for_idea4_all_attnFliter_DanceData"
 if not os.path.exists(directory):
     os.makedirs(directory)
 acc_size = 2
