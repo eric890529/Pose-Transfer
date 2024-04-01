@@ -151,7 +151,7 @@ for x in val_dataset:
             images[k] = images[k].detach().cpu()
             images[k] = torch.clamp(images[k], -1., 1.)
 
-    name = "idea4_all_attnFliter_Dance"
+    name = "idea4_all_attnFliter_Dance_app"
     log_local("", "train/inferenceLog_" + name, images,
                 0, 0, index)
     index += 1

@@ -36,7 +36,7 @@ class Dataset(Dataset):
         # if not self.env:
         #     raise IOError('Cannot open lmdb dataset', path)
 
-        self.file_path = 'train_pairs.csv' if not is_inference else 'test_pairs.csv'
+        self.file_path = 'train_pairs.csv' if not is_inference else 'application_pairs.csv'
         self.data = self.get_paths(self.root, self.file_path)
         self.is_inference = is_inference
         self.preprocess_mode = opt.preprocess_mode
@@ -93,7 +93,7 @@ class Dataset(Dataset):
         i = np.random.choice(list(range(0, len(path_item['source_image']))))
         source_image_path = path_item['source_image'][i]
         source_label_path = path_item['source_label'][i]
-
+        
         target_image_tensor, param = self.get_image_tensor(path_item['target_image'])
 
         if self.labels_required:

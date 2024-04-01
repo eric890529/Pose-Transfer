@@ -6,7 +6,7 @@ data:
     path: /workspace/dataset/dataset/customDataset
     poseData: /workspace/dataset/dataset/customDataset/poseData
     num_workers: 8
-    sub_path: 256-256
+    sub_path: test256x256/256-256 #256-256
     resolution: 256
     scale_param: 0.05
     train:
