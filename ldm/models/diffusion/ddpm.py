@@ -609,10 +609,17 @@ class LatentDiffusion(DDPM):
     @rank_zero_only
     @torch.no_grad()
     def on_train_batch_start(self, batch, batch_idx ):#dataloader_idx
-        #print("start")
-        # import copy
-        # global old_diffusion_model 
-        # old_diffusion_model = copy.deepcopy(self.model)
+        print("start")
+        import copy
+        global old_encoder_resisual_block
+        old_encoder_resisual_block = copy.deepcopy(self.model.diffusion_model.input_blocks[1][0])
+        global old_encoder_attn_block
+        old_encoder_attn_block = copy.deepcopy(self.model.diffusion_model.input_blocks[1][1])
+        global old_decoder_resisual_block
+        old_decoder_resisual_block = copy.deepcopy(self.model.diffusion_model.output_blocks[3][0])
+        global old_decoder_attn_block
+        old_decoder_attn_block = copy.deepcopy(self.model.diffusion_model.output_blocks[3][1])
+        # global old_first_stage_model 
         # global old_first_stage_model 
         # old_first_stage_model = copy.deepcopy(self.first_stage_model)
         # global old_cond_stage_model 
@@ -636,22 +643,25 @@ class LatentDiffusion(DDPM):
             print(f"setting self.scale_factor to {self.scale_factor}")
             print("### USING STD-RESCALING ###")
             
-    # def on_train_batch_end(self, *args, **kwargs):
-    #     self.cmp_model(old_diffusion_model, self.model, "self.model")
+    def on_train_batch_end(self, *args, **kwargs):
+        self.cmp_model(old_encoder_resisual_block, self.model.diffusion_model.input_blocks[1][0], "encoder residual")
+        self.cmp_model(old_encoder_attn_block, self.model.diffusion_model.input_blocks[1][1], "encoder attn")
+        self.cmp_model(old_decoder_resisual_block, self.model.diffusion_model.output_blocks[3][0], "decoder residual")
+        self.cmp_model(old_decoder_attn_block, self.model.diffusion_model.output_blocks[3][1], "decoder attn")
         # self.cmp_model(old_first_stage_model, self.first_stage_model, "first_stage_model")
         # self.cmp_model(old_cond_stage_model, self.cond_stage_model, "cond_stage_model")
         # self.cmp_model(old_control_model, self.control_model, "control_model")
         # self.cmp_model(old_style_encoder, self.style_encoder, "style_encoder")
-    #     #print("end")
+        #print("end")
         
         
-    # def cmp_model(self, model1, model2, model_name ) :
-    #     param1 = model1.named_parameters()
-    #     param2 = model2.named_parameters()
-    #     for p1, p2 in zip( param1, param2 ) :
-    #         if not torch.equal( p1[1], p2[1] ) :
-    #             print( model_name + ' change' )
-    #             break
+    def cmp_model(self, model1, model2, model_name ) :
+        param1 = model1.named_parameters()
+        param2 = model2.named_parameters()
+        for p1, p2 in zip( param1, param2 ) :
+            if not torch.equal( p1[1], p2[1] ) :
+                print( model_name + ' change' )
+                break
         # tempList = []
         # tempList2 = []
         
@@ -1033,8 +1043,8 @@ class LatentDiffusion(DDPM):
         plt.ylabel('loss')
         plt.xlabel('global_step')
         plt.legend()    
-        index = 5
-        filename = "idea4_all_attnFliter_" + str(index) + ".jpg"
+        index = 1
+        filename = "idea4_all_attnFliter_only_Attn" + str(index) + ".jpg"
         plt.savefig(os.path.join('lossCurve', filename))
     
 
