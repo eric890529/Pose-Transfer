@@ -107,17 +107,18 @@ def log_local(save_dir, split, images, global_step, current_epoch, batch_idx):
             Image.fromarray(grid).save(path)
 
 
-# debugpy.listen(("0.0.0.0", 7777))
-# print("Waiting for client to attach...")
-# debugpy.wait_for_client()
+debugpy.listen(("0.0.0.0", 7979))
+print("Waiting for client to attach...")
+debugpy.wait_for_client()
 import danceDataset as dance_data
 
 parser = argparse.ArgumentParser(description='help')
-# parser.add_argument('--dataset_path', type=str, default='/workspace/dataset/dataset/deepfashion')
-parser.add_argument('--dataset_path', type=str, default='/workspace/dataset/dataset/customDataset')
 
-# parser.add_argument('--DataConfigPath', type=str, default='./dataConfig/data.yaml')
-parser.add_argument('--DataConfigPath', type=str, default='./dataConfig/customData.yaml')
+parser.add_argument('--dataset_path', type=str, default='/workspace/dataset/dataset/deepfashion')
+parser.add_argument('--DataConfigPath', type=str, default='./dataConfig/data.yaml')
+
+# parser.add_argument('--dataset_path', type=str, default='/workspace/dataset/dataset/customDataset')
+# parser.add_argument('--DataConfigPath', type=str, default='./dataConfig/customData.yaml')
 parser.add_argument('--batch_size', type=int, default=16)
 
 args = parser.parse_args()
@@ -126,11 +127,12 @@ DataConf = DataConfig(args.DataConfigPath)
 DataConf.data.path = args.dataset_path
 DataConf.data.val.batch_size = args.batch_size
 batch_size = args.batch_size
-# val_dataset, train_dataset = deepfashion_data.get_train_val_dataloader(DataConf.data, labels_required = True, distributed = False)
-val_dataset, train_dataset = dance_data.get_train_val_dataloader(DataConf.data, labels_required = True, distributed = False)
+val_dataset, train_dataset = deepfashion_data.get_train_val_dataloader(DataConf.data, labels_required = True, distributed = False)
+# val_dataset, train_dataset = dance_data.get_train_val_dataloader(DataConf.data, labels_required = True, distributed = False)
 
 model = create_model('./models/idea4.yaml').cpu()
-model.load_state_dict(load_state_dict('./checkpoint_for_idea4_all_attnFliter_DanceData/new_exp_sd21_epoch=10_step=012000.ckpt', location='cpu'))
+model.load_state_dict(load_state_dict('./checkpoint_for_idea4_all_attnFliter_DanceData/new_exp_sd21_epoch=05_step=006000.ckpt', location='cpu'))
+# model.load_state_dict(load_state_dict('./checkpoint_for_idea4_all_attnFliter/new_exp_sd21_epoch=200_step=744000.ckpt', location='cpu'))
 model = model.cuda()
 ddim_sampler = DDIMSampler(model)
 
@@ -151,7 +153,7 @@ for x in val_dataset:
             images[k] = images[k].detach().cpu()
             images[k] = torch.clamp(images[k], -1., 1.)
 
-    name = "idea4_all_attnFliter_Dance_app"
+    name = "idea4_all_attnFliter_Dance_disaster"
     log_local("", "train/inferenceLog_" + name, images,
                 0, 0, index)
     index += 1

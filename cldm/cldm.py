@@ -481,7 +481,7 @@ class ControlLDM(LatentDiffusion):
         use_ddim = ddim_steps is not None
 
         log = dict()
-        z, c = self.get_input(batch, self.first_stage_key, bs=N)
+        z, c = self.get_input(batch, self.first_stage_key, bs=N, **kwargs)
         #c_cat, c = c["c_concat"][0][:N], c["c_crossattn"][0][:N]
         c_cat = c["c_concat"][0][:N]
         c_style = c["c_style"][0][:N] #
