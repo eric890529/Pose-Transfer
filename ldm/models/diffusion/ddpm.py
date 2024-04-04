@@ -426,7 +426,10 @@ class DDPM(pl.LightningModule):
         x = batch[k]
         
         if not is_inference:
-            x = torch.cat([batch['target_image'], batch['source_image']], 0)
+            if torch.all(batch['source_image'] == 0):
+                x = torch.cat([batch['target_image'], batch['target_image']], 0)
+            else:
+                x = torch.cat([batch['target_image'], batch['source_image']], 0)
         
         if len(x.shape) == 3:
             x = x[..., None]
@@ -448,6 +451,17 @@ class DDPM(pl.LightningModule):
             for i in range(len(batch[k])):
                 if self.ucg_prng.choice(2, p=[1 - p, p]):
                     batch[k][i] = val
+        
+
+        cfg_value = 0.15
+        # batch["ref_values"] = None
+        rand = torch.rand(1).cuda()
+        if rand < cfg_value:
+            batch["target_skeleton"] = batch["target_skeleton"] * 0
+        elif cfg_value <= rand < cfg_value * 2:
+            batch["source_image"] = torch.zeros_like(batch["source_image"])
+
+
 
         loss, loss_dict = self.shared_step(batch)
 
@@ -1033,8 +1047,8 @@ class LatentDiffusion(DDPM):
         plt.ylabel('loss')
         plt.xlabel('global_step')
         plt.legend()    
-        index = 5
-        filename = "idea4_all_attnFliter_" + str(index) + ".jpg"
+        index = 1
+        filename = "idea4_all_attnFliter_Classifier" + str(index) + ".jpg"
         plt.savefig(os.path.join('lossCurve', filename))
     
 

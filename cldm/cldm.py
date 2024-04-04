@@ -379,10 +379,19 @@ class ControlLDM(LatentDiffusion):
         x, c = super().get_input(batch, self.first_stage_key, is_inference=is_inference, *args, **kwargs)#抓到 latent code of x
         #control = batch[self.control_key] #抓到condition的圖片
         if not is_inference:
-            control = torch.cat([batch['source_image'], batch['target_image']], 0)
+            if torch.all(batch['source_image'] == 0):
+                control = torch.zeros_like(torch.cat([batch['source_image'], batch['target_image']], 0))
+            else:
+                control = torch.cat([batch['source_image'], batch['target_image']], 0)
             style_img = control
+
             ## 這裡做pose跟圖片concat?? pose也要經過encoder? 還是concat完再進入encoder?
-            pose = torch.cat([batch['target_skeleton'], batch['source_skeleton']], 0)
+            if torch.all(batch['target_skeleton'] == 0):
+                pose = torch.cat([batch['target_skeleton'], batch['source_skeleton']], 0) * 0
+            elif torch.all(batch['source_image'] == 0):
+                pose = torch.cat([batch['target_skeleton'], batch['target_skeleton']], 0) 
+            else:
+                pose = torch.cat([batch['target_skeleton'], batch['source_skeleton']], 0) 
             #control = torch.cat([control,pose] , dim=1) # 再看看要pose就好 還是全部都要一起餵入
         else:
             control = batch['source_image']
@@ -424,10 +433,16 @@ class ControlLDM(LatentDiffusion):
         # torch_resize = Resize([32,32])
         # cond['c_style'][0] = torch_resize(cond['c_style'][0])
         # cond_style = self.style_encoder(cond['c_style'][0])
-        
-        encoder_posterior = self.encode_first_stage(cond['c_style'][0].to("cuda"))
-        z_style = self.get_first_stage_encoding(encoder_posterior).detach() # latent code
-        cond_style = self.style_encoder(z_style)
+        if not torch.all(cond['c_style'][0] == 0):
+            encoder_posterior = self.encode_first_stage(cond['c_style'][0].to("cuda"))
+            z_style = self.get_first_stage_encoding(encoder_posterior).detach() # latent code
+            cond_style = self.style_encoder(z_style)
+        else:
+            b, c, h, w = x_noisy.shape
+            temp = torch.zeros(b, 4, h, w)
+            cond_style = []
+            for i in range(12):
+                cond_style.append(temp)
         
         # Get CLIP embeddings
         controlInput = torch.cat(cond['c_concat'], 1)
@@ -525,8 +540,9 @@ class ControlLDM(LatentDiffusion):
 
         if unconditional_guidance_scale > 1.0:
             # uc_cross = self.get_unconditional_conditioning(N)
-            uc_cat = c_cat  # torch.zeros_like(c_cat)
-            uc_style =  c_style
+            uc_cat = c_cat * 0 # torch.zeros_like(c_cat)
+            # uc_style =  c_style
+            uc_style =  torch.zeros_like(c_style)
             uc_full = {"c_concat": [uc_cat],  "c_style" : [uc_style]}# "c_crossattn": [uc_cross],
             # samples_cfg, _ = self.sample_log(cond={"c_concat": [c_cat], "c_crossattn": [c]},
             #                                  batch_size=N, ddim=use_ddim,
@@ -555,12 +571,12 @@ class ControlLDM(LatentDiffusion):
 
     def configure_optimizers(self):
         lr = self.learning_rate
-        params = list(self.control_model.parameters() )+ list(self.style_encoder.parameters())   + list(self.model.diffusion_model.parameters())
+        params = list(self.control_model.parameters() )+ list(self.style_encoder.parameters())   #+ list(self.model.diffusion_model.parameters())
               # #list(self.first_stage_model.parameters()) +  list(self.adapter.parameters())
         if not self.sd_locked:
-            params += list(self.model.parameters())
-            # params += list(self.model.diffusion_model.output_blocks.parameters())
-            # params += list(self.model.diffusion_model.out.parameters())
+            # params += list(self.model.parameters())
+            params += list(self.model.diffusion_model.output_blocks.parameters())
+            params += list(self.model.diffusion_model.out.parameters())
         opt = torch.optim.AdamW(params, lr=lr)
         return opt
     

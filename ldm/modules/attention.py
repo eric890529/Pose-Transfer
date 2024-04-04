@@ -227,6 +227,13 @@ class CrossAttention(nn.Module):
         else:
             sim = einsum('b i d, b j d -> b i j', q, k) * self.scale
         return sim
+    
+    def skip_forward(self, hidden_states):
+        
+        hidden_states = self.to_q(hidden_states)
+        hidden_states = self.to_out(hidden_states)
+       
+        return hidden_states
 
     def forward(self, x, context=None, mask=None):
         h = self.heads
@@ -352,57 +359,57 @@ class MemoryEfficientCrossAttention(nn.Module):
         return self.to_out(out)
 
 
-class MemoryEfficientCrossAttention(nn.Module):
-    # https://github.com/MatthieuTPHR/diffusers/blob/d80b531ff8060ec1ea982b65a1b8df70f73aa67c/src/diffusers/models/attention.py#L223
-    def __init__(self, query_dim, context_dim=None, heads=8, dim_head=64, dropout=0.0):
-        super().__init__()
-        print(f"Setting up {self.__class__.__name__}. Query dim is {query_dim}, context_dim is {context_dim} and using "
-              f"{heads} heads.")
-        inner_dim = dim_head * heads
-        context_dim = default(context_dim, query_dim)
+# class MemoryEfficientCrossAttention(nn.Module):
+#     # https://github.com/MatthieuTPHR/diffusers/blob/d80b531ff8060ec1ea982b65a1b8df70f73aa67c/src/diffusers/models/attention.py#L223
+#     def __init__(self, query_dim, context_dim=None, heads=8, dim_head=64, dropout=0.0):
+#         super().__init__()
+#         print(f"Setting up {self.__class__.__name__}. Query dim is {query_dim}, context_dim is {context_dim} and using "
+#               f"{heads} heads.")
+#         inner_dim = dim_head * heads
+#         context_dim = default(context_dim, query_dim)
 
-        self.heads = heads
-        self.dim_head = dim_head
+#         self.heads = heads
+#         self.dim_head = dim_head
 
-        self.to_q = nn.Linear(query_dim, inner_dim, bias=False)
-        self.to_k = nn.Linear(context_dim, inner_dim, bias=False)
-        self.to_v = nn.Linear(context_dim, inner_dim, bias=False)
+#         self.to_q = nn.Linear(query_dim, inner_dim, bias=False)
+#         self.to_k = nn.Linear(context_dim, inner_dim, bias=False)
+#         self.to_v = nn.Linear(context_dim, inner_dim, bias=False)
 
-        self.to_out = nn.Sequential(nn.Linear(inner_dim, query_dim), nn.Dropout(dropout))
-        self.attention_op: Optional[Any] = None
+#         self.to_out = nn.Sequential(nn.Linear(inner_dim, query_dim), nn.Dropout(dropout))
+#         self.attention_op: Optional[Any] = None
 
-    def forward(self, x, context=None, mask=None):
-        q = self.to_q(x)
-        context = default(context, x)
+#     def forward(self, x, context=None, mask=None):
+#         q = self.to_q(x)
+#         context = default(context, x)
         
-        # layer = nn.Linear(context.shape[2], self.to_k.in_features, bias=False).to("cuda") #因為權重的size就是768(CLIP的大小)所以這邊硬讓他變768
-        # context = layer(context)
+#         # layer = nn.Linear(context.shape[2], self.to_k.in_features, bias=False).to("cuda") #因為權重的size就是768(CLIP的大小)所以這邊硬讓他變768
+#         # context = layer(context)
         
-        k = self.to_k(context)
-        v = self.to_v(context)
+#         k = self.to_k(context)
+#         v = self.to_v(context)
 
-        b, _, _ = q.shape
-        q, k, v = map(
-            lambda t: t.unsqueeze(3)
-            .reshape(b, t.shape[1], self.heads, self.dim_head)
-            .permute(0, 2, 1, 3)
-            .reshape(b * self.heads, t.shape[1], self.dim_head)
-            .contiguous(),
-            (q, k, v),
-        )
+#         b, _, _ = q.shape
+#         q, k, v = map(
+#             lambda t: t.unsqueeze(3)
+#             .reshape(b, t.shape[1], self.heads, self.dim_head)
+#             .permute(0, 2, 1, 3)
+#             .reshape(b * self.heads, t.shape[1], self.dim_head)
+#             .contiguous(),
+#             (q, k, v),
+#         )
 
-        # actually compute the attention, what we cannot get enough of
-        out = xformers.ops.memory_efficient_attention(q, k, v, attn_bias=None, op=self.attention_op)
+#         # actually compute the attention, what we cannot get enough of
+#         out = xformers.ops.memory_efficient_attention(q, k, v, attn_bias=None, op=self.attention_op)
 
-        if exists(mask):
-            raise NotImplementedError
-        out = (
-            out.unsqueeze(0)
-            .reshape(b, self.heads, out.shape[1], self.dim_head)
-            .permute(0, 2, 1, 3)
-            .reshape(b, out.shape[1], self.heads * self.dim_head)
-        )
-        return self.to_out(out)
+#         if exists(mask):
+#             raise NotImplementedError
+#         out = (
+#             out.unsqueeze(0)
+#             .reshape(b, self.heads, out.shape[1], self.dim_head)
+#             .permute(0, 2, 1, 3)
+#             .reshape(b, out.shape[1], self.heads * self.dim_head)
+#         )
+#         return self.to_out(out)
 
 
 class BasicTransformerBlock(nn.Module):
@@ -432,10 +439,14 @@ class BasicTransformerBlock(nn.Module):
         # return checkpoint(self._forward, ( x.unsqueeze( dim = 0 ) ), self.parameters(), self.checkpoint)
 
     def _forward(self, x, context=None):
-        x = self.attn1(self.norm1(x), context=context if self.disable_self_attn else None) + x
-        #x = self.attn2(self.norm2(x), context=context if self.disable_self_attn else None) + x 
-        x = self.attn2(self.norm2(x), context=context) + x
-        x = self.ff(self.norm3(x)) + x
+        if torch.all(context == 0):
+            x = self.attn1.skip_forward(self.norm1(x))
+            x = self.ff(self.norm3(x)) + x
+        else:
+            x = self.attn1(self.norm1(x), context=context if self.disable_self_attn else None) + x
+            #x = self.attn2(self.norm2(x), context=context if self.disable_self_attn else None) + x 
+            x = self.attn2(self.norm2(x), context=context) + x
+            x = self.ff(self.norm3(x)) + x
         return x
 
 

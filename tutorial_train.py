@@ -17,9 +17,9 @@ from ldm.modules.diffusionmodules.util import (
     timestep_embedding,
 )
 
-# debugpy.listen(("0.0.0.0", 7777))
-# print("Waiting for client to attach...")
-# debugpy.wait_for_client()
+debugpy.listen(("0.0.0.0", 7979))
+print("Waiting for client to attach...")
+debugpy.wait_for_client()
 
 
 import argparse
@@ -40,11 +40,11 @@ val_dataset, train_dataset = deepfashion_data.get_train_val_dataloader(DataConf.
 
 # Configs
 resume_path = './models/idea4_attnFliter.ckpt'
-# resume_path = './checkpoint_for_idea4_all_attnFliter/new_exp_sd21_epoch=183_step=678000.ckpt'
+resume_path = './checkpoint_for_idea4_all_attnFliter_Classifier/new_exp_sd21_epoch=17_step=066000.ckpt'
 #batch_size = 2
 logger_freq = 4000
 learning_rate = 1e-5
-sd_locked = True
+sd_locked = False #True
 only_mid_control = False
 
 
@@ -87,7 +87,7 @@ model.only_mid_control = only_mid_control
 from pytorch_lightning.callbacks import ModelCheckpoint
 
 import os
-directory = "checkpoint_for_idea4_all_attnFliter"
+directory = "checkpoint_for_idea4_all_attnFliter_Classifier"
 if not os.path.exists(directory):
     os.makedirs(directory)
 acc_size = 2
@@ -102,7 +102,7 @@ checkpoint_callback = ModelCheckpoint(dirpath = directory,
 # dataloader = DataLoader(dataset, num_workers=0, batch_size=batch_size, shuffle=True)
 logger = ImageLogger(batch_frequency=logger_freq)
 trainer = pl.Trainer(accelerator="gpu", devices=[gpu], precision=32, callbacks=[logger, checkpoint_callback],
-                     accumulate_grad_batches=acc_size) # , resume_from_checkpoint = './checkpoint/last.ckpt' , resume_from_checkpoint = './checkpoint_for_diffusion/last.ckpt'
+                     accumulate_grad_batches=acc_size, resume_from_checkpoint = resume_path) # , resume_from_checkpoint = './checkpoint/last.ckpt' , resume_from_checkpoint = './checkpoint_for_diffusion/last.ckpt'
 #, resume_from_checkpoint = resume_path
 # Train!
 trainer.fit(model, train_dataset)
