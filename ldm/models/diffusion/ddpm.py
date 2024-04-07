@@ -453,13 +453,13 @@ class DDPM(pl.LightningModule):
                     batch[k][i] = val
         
 
-        cfg_value = 0.15
-        # batch["ref_values"] = None
-        rand = torch.rand(1).cuda()
-        if rand < cfg_value:
-            batch["target_skeleton"] = batch["target_skeleton"] * 0
-        elif cfg_value <= rand < cfg_value * 2:
-            batch["source_image"] = torch.zeros_like(batch["source_image"])
+        # cfg_value = 0.15
+        # # batch["ref_values"] = None
+        # rand = torch.rand(1).cuda()
+        # if rand < cfg_value:
+        #     batch["target_skeleton"] = batch["target_skeleton"] * 0
+        # elif cfg_value <= rand < cfg_value * 2:
+        #     batch["source_image"] = torch.zeros_like(batch["source_image"])
 
 
 

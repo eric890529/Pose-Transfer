@@ -10,18 +10,19 @@ import random
 from pytorch_lightning import seed_everything
 from annotator.util import resize_image, HWC3
 from cldm.model import create_model, load_state_dict
-from cldm.ddim_hacked import DDIMSampler
+# from cldm.ddim_hacked import DDIMSampler
 import data as deepfashion_data
 from dataConfig.dataconfig import Config as DataConfig
 import argparse
 import debugpy
 import os
+from ldm.models.diffusion.ddim import DDIMSampler
 
 import torchvision
 from PIL import Image
 
 
-# debugpy.listen(("0.0.0.0", 7777))
+# debugpy.listen(("0.0.0.0", 7979))
 # print("Waiting for client to attach...")
 # debugpy.wait_for_client()
 
@@ -37,28 +38,34 @@ DataConf = DataConfig(args.DataConfigPath)
 DataConf.data.path = args.dataset_path
 
 # DataConf.data.train.batch_size = args.batch_size//2  #src -> tgt , tgt -> s
-batch_size = 32
+batch_size = 16
 DataConf.data.val.batch_size = batch_size
 
 val_dataset, train_dataset = deepfashion_data.get_train_val_dataloader(DataConf.data, labels_required = True, distributed = False)
 
-ckpt_list = ["new_exp_sd21_epoch=200_step=744000.ckpt"]
+ckpt_list = ["new_exp_sd21_epoch=100_step=372000.ckpt"]
 
-path = "/workspace/ControlNet_idea1_2/checkpoint_for_idea4_all_attnFliter"
-dir_list = os.listdir(path)
-print("Files and directories in '", path, "' :")
+
+dir = "checkpoint_for_idea4_all_attnFliter_Classifier/"
+path = "/workspace/ControlNet_idea1_2/" + dir
+
+# dir_list = os.listdir(path)
+# print("Files and directories in '", path, "' :")
 # prints all files
-print(dir_list)
+# print(dir_list)
+
+
 import os 
 os.environ['CUDA_VISIBLE_DEVICES'] = "1"
 torch.cuda.set_device(1)
-for ckpt in dir_list:
+for ckpt in ckpt_list:
+    print("-------------------inference "+ dir + ckpt + "------------------------")
     eIdx = ckpt.find("epoch")
     epoch = ckpt[eIdx:eIdx+9]
     epoch = epoch.replace("=", "_")
 
     model = create_model('./models/idea4.yaml').cpu()
-    model.load_state_dict(load_state_dict('./checkpoint_for_idea4_all_attnFliter/' + ckpt, location='cpu'))
+    model.load_state_dict(load_state_dict('./' + dir + ckpt, location='cpu'))
     model = model.cuda(1)
     model.eval()
     ddim_sampler = DDIMSampler(model)
@@ -71,7 +78,7 @@ for ckpt in dir_list:
     strength = 1.0
     guess_mode = False
     count = 0
-    batch_size = 32
+    batch_size = 16
 
     for x in val_dataset:
         count += batch_size
@@ -82,7 +89,9 @@ for ckpt in dir_list:
             control =  c["c_concat"][0][:batch_size]
             c_style = c["c_style"][0][:batch_size] #
             cond = {"c_concat": [control], "c_style" : [c_style]}
-            uc_full = {"c_concat": [control],  "c_style" : [c_style]}
+            uc_cat = control * 0
+            uc_style =  torch.zeros_like(c_style)
+            uc_full = {"c_concat": [uc_cat],  "c_style" : [uc_style]}
             shape = (4, DataConf.data.resolution // 8, DataConf.data.resolution // 8)
 
             if config.save_memory:
@@ -101,12 +110,12 @@ for ckpt in dir_list:
             x_samples = (einops.rearrange(x_samples, 'b c h w -> b h w c') * 127.5 + 127.5).cpu().numpy().clip(0, 255).astype(np.uint8)
 
             results = [x_samples[i] for i in range(batch_size)]
-            path = './inferenceValDataset_idea4_all_attnFliter_' + epoch 
+            path = './inferenceValDataset_idea4_all_attnFliter_Classifier' + epoch 
             if not os.path.exists(path):
                 os.makedirs(path)
             index = 0
             for result in results:
-                path = './inferenceValDataset_idea4_all_attnFliter_' + epoch 
+                path = './inferenceValDataset_idea4_all_attnFliter_Classifier' + epoch 
                 path = path + '/' + x["path"][index]
                 Image.fromarray(result).save(path)
                 index += 1
