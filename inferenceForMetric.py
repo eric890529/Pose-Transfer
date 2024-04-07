@@ -37,22 +37,24 @@ DataConf = DataConfig(args.DataConfigPath)
 DataConf.data.path = args.dataset_path
 
 # DataConf.data.train.batch_size = args.batch_size//2  #src -> tgt , tgt -> s
-batch_size = 32
+batch_size = 6
 DataConf.data.val.batch_size = batch_size
 
 val_dataset, train_dataset = deepfashion_data.get_train_val_dataloader(DataConf.data, labels_required = True, distributed = False)
 
-ckpt_list = ["new_exp_sd21_epoch=200_step=744000.ckpt"]
+ckpt_list = ["new_exp_sd21_epoch=100_step=372000.ckpt"]
 
 path = "/workspace/ControlNet_idea1_2/checkpoint_for_idea4_all_attnFliter"
-dir_list = os.listdir(path)
-print("Files and directories in '", path, "' :")
+
+# dir_list = os.listdir(path)
+# print("Files and directories in '", path, "' :")
 # prints all files
-print(dir_list)
+# print(dir_list)
+
 import os 
 os.environ['CUDA_VISIBLE_DEVICES'] = "1"
 torch.cuda.set_device(1)
-for ckpt in dir_list:
+for ckpt in ckpt_list:
     eIdx = ckpt.find("epoch")
     epoch = ckpt[eIdx:eIdx+9]
     epoch = epoch.replace("=", "_")
@@ -71,7 +73,7 @@ for ckpt in dir_list:
     strength = 1.0
     guess_mode = False
     count = 0
-    batch_size = 32
+    batch_size = 6
 
     for x in val_dataset:
         count += batch_size
