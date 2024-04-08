@@ -224,7 +224,7 @@ class DDIMSampler(object):
             
             c_pose['c_style'][0] = torch.zeros_like(c_pose['c_style'][0])  # no style
 
-            ref_scale = 6
+            ref_scale = 5
             pose_scale = 5
             model_t = self.model.apply_model(x_cond, t_cond, c_cond) #with all cond
             model_pose = self.model.apply_model(x_pose, t_pose, c_pose) #with pose no style
