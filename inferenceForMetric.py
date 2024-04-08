@@ -37,7 +37,7 @@ DataConf = DataConfig(args.DataConfigPath)
 DataConf.data.path = args.dataset_path
 
 # DataConf.data.train.batch_size = args.batch_size//2  #src -> tgt , tgt -> s
-batch_size = 6
+batch_size = 32
 DataConf.data.val.batch_size = batch_size
 
 val_dataset, train_dataset = deepfashion_data.get_train_val_dataloader(DataConf.data, labels_required = True, distributed = False)
@@ -73,7 +73,7 @@ for ckpt in ckpt_list:
     strength = 1.0
     guess_mode = False
     count = 0
-    batch_size = 6
+    batch_size = 32
 
     for x in val_dataset:
         count += batch_size
