@@ -7,7 +7,7 @@ from einops import rearrange, repeat
 from typing import Optional, Any
 
 from ldm.modules.diffusionmodules.util import checkpoint
-
+from attnVisualizer.visualizer import get_local
 
 try:
     import xformers
@@ -161,6 +161,7 @@ class CrossAttention(nn.Module):
             nn.Dropout(dropout)
         )
 
+    
     def forward(self, x, context=None, mask=None):
         h = self.heads
 
@@ -218,6 +219,7 @@ class MemoryEfficientCrossAttention(nn.Module):
         self.to_out = nn.Sequential(nn.Linear(inner_dim, query_dim), nn.Dropout(dropout))
         self.attention_op: Optional[Any] = None
 
+    @get_local('sim')
     def forward(self, x, context=None, mask=None):
         q = self.to_q(x)
         context = default(context, x)
@@ -237,6 +239,12 @@ class MemoryEfficientCrossAttention(nn.Module):
             .contiguous(),
             (q, k, v),
         )
+
+        ###
+        q, k = q.float(), k.float()
+        sim = einsum('b i d, b j d -> b i j', q, k) * (self.dim_head ** -0.5)
+        sim = sim.softmax(dim=-1)
+        ###
 
         # actually compute the attention, what we cannot get enough of
         out = xformers.ops.memory_efficient_attention(q, k, v, attn_bias=None, op=self.attention_op)
