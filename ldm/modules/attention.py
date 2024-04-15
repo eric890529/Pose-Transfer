@@ -7,7 +7,7 @@ from einops import rearrange, repeat
 from typing import Optional, Any
 
 from ldm.modules.diffusionmodules.util import checkpoint
-
+from attnVisualizer.visualizer import get_local
 
 try:
     import xformers
@@ -234,13 +234,14 @@ class CrossAttention(nn.Module):
         hidden_states = self.to_out(hidden_states)
        
         return hidden_states
-
+    
+    @get_local('attention_probs')
     def forward(self, x, context=None, mask=None):
         h = self.heads
-
         q = self.to_q(x)
         context = default(context, x) #變成x 做self attentoin?
-
+        # print("fuck yall")
+        # print(get_local.is_activate)
         # layer = nn.Linear(context.shape[2], self.to_k.in_features, bias=False).to("cuda") #因為權重的size就是768(CLIP的大小)所以這邊硬讓他變768
         # context = layer(context)
 
