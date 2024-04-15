@@ -19,11 +19,12 @@ import os
 
 import torchvision
 from PIL import Image
+from attnVisualizer.visualizer import get_local
+get_local.activate() 
 
-
-# debugpy.listen(("0.0.0.0", 7777))
-# print("Waiting for client to attach...")
-# debugpy.wait_for_client()
+debugpy.listen(("0.0.0.0", 7777))
+print("Waiting for client to attach...")
+debugpy.wait_for_client()
 
 
 parser = argparse.ArgumentParser(description='help')
@@ -37,12 +38,12 @@ DataConf = DataConfig(args.DataConfigPath)
 DataConf.data.path = args.dataset_path
 
 # DataConf.data.train.batch_size = args.batch_size//2  #src -> tgt , tgt -> s
-batch_size = 32
+batch_size = args.batch_size
 DataConf.data.val.batch_size = batch_size
 
 val_dataset, train_dataset = deepfashion_data.get_train_val_dataloader(DataConf.data, labels_required = True, distributed = False)
 
-ckpt_list = ["new_exp_sd21_epoch=100_step=372000.ckpt"]
+ckpt_list = ["new_exp_sd21_epoch=200_step=744000.ckpt"]
 dir = 'checkpoint_for_idea4_all_attnFliter_only_Attn/'
 path = "/workspace/ControlNet_idea1_2/" + dir
 
@@ -50,10 +51,10 @@ path = "/workspace/ControlNet_idea1_2/" + dir
 # print("Files and directories in '", path, "' :")
 # # prints all files
 # print(dir_list)
-
+gpu = 0
 import os 
-os.environ['CUDA_VISIBLE_DEVICES'] = "0"
-torch.cuda.set_device(0)
+os.environ['CUDA_VISIBLE_DEVICES'] = str(gpu)
+torch.cuda.set_device(gpu)
 
 for ckpt in ckpt_list:
     eIdx = ckpt.find("epoch")
@@ -62,8 +63,8 @@ for ckpt in ckpt_list:
 
     model = create_model('./models/idea4.yaml').cpu()
     model.load_state_dict(load_state_dict('./'+ dir + ckpt, location='cpu'))
-    model = model.cuda(0) #
-    model.eval()
+    model = model.cuda(gpu) #
+    # model.eval()
     ddim_sampler = DDIMSampler(model)
 
     if config.save_memory:
@@ -74,12 +75,14 @@ for ckpt in ckpt_list:
     strength = 1.0
     guess_mode = False
     count = 0
-    batch_size = 32
+    batch_size = args.batch_size
 
     for x in val_dataset:
         count += batch_size
         if count > len(val_dataset.dataset):
             batch_size = batch_size - (count - len(val_dataset.dataset))
+            
+        get_local.clear()
         with torch.no_grad():
             z, c = model.get_input(x, "nothing", bs=batch_size, is_inference = True)
             control =  c["c_concat"][0][:batch_size]
@@ -113,4 +116,7 @@ for ckpt in ckpt_list:
                 path = path + '/' + x["path"][index]
                 Image.fromarray(result).save(path)
                 index += 1
+            
+            cache = get_local.cache
+            print(list(cache.keys()))
         

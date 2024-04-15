@@ -5,7 +5,7 @@ import numpy as np
 from tqdm import tqdm
 
 from ldm.modules.diffusionmodules.util import make_ddim_sampling_parameters, make_ddim_timesteps, noise_like, extract_into_tensor
-
+from attnVisualizer.visualizer import get_local
 
 class DDIMSampler(object):
     def __init__(self, model, schedule="linear", **kwargs):
@@ -13,6 +13,8 @@ class DDIMSampler(object):
         self.model = model
         self.ddpm_num_timesteps = model.num_timesteps
         self.schedule = schedule
+
+        get_local.activate() 
 
     def register_buffer(self, name, attr):
         if type(attr) == torch.Tensor:
@@ -100,6 +102,7 @@ class DDIMSampler(object):
         size = (batch_size, C, H, W)
         print(f'Data shape for DDIM sampling is {size}, eta {eta}')
 
+        get_local.clear()
         samples, intermediates = self.ddim_sampling(conditioning, size,
                                                     callback=callback,
                                                     img_callback=img_callback,
