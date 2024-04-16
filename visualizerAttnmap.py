@@ -174,7 +174,7 @@ def visualize_grid_to_grid(att_map, grid_index, target, source, grid_size=32, al
     ax[1].imshow(mask/np.max(mask), alpha=alpha, cmap='rainbow')
     ax[1].axis('off')
     global imgIndex
-    save_path = './attnmap27_'+str(imgIndex)+'.png'
+    save_path = './attnmap340_tits_'+str(imgIndex)+'.png'
     imgIndex = imgIndex + 1
     plt.savefig(save_path, bbox_inches='tight')
     plt.close(fig)  # 關閉圖表，以防止它在後台顯示
@@ -563,7 +563,7 @@ for ckpt in ckpt_list:
     attn_map = cache["CrossAttention.forward"]
     attn_map = [np.expand_dims(item, axis=0) for item in attn_map]
     # attn_map = attn_map.unsqueeze(0)
-    grid = 540 #340
+    grid = 340
     attn_layer = 4553-92
     visualize_grid_to_grid(attn_map[attn_layer][0,0,:,:], grid, target, source)
     visualize_grid_to_grid(attn_map[attn_layer][0,1,:,:], grid, target, source)
