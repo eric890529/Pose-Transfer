@@ -240,8 +240,7 @@ class CrossAttention(nn.Module):
         h = self.heads
         q = self.to_q(x)
         context = default(context, x) #變成x 做self attentoin?
-        # print("fuck yall")
-        # print(get_local.is_activate)
+        
         # layer = nn.Linear(context.shape[2], self.to_k.in_features, bias=False).to("cuda") #因為權重的size就是768(CLIP的大小)所以這邊硬讓他變768
         # context = layer(context)
 

@@ -40,9 +40,6 @@ global ddim_alphas_prev
 global ddim_sigmas 
 global attn_map_cache
 attn_map_cache = []
-global imgIndex
-imgIndex = 0
-
 
 
 def grid_show(to_shows, cols):
@@ -152,7 +149,7 @@ def visualize_grid_to_grid_with_cls(att_map, grid_index, image, grid_size=14, al
     ax[1].axis('off')
     
 
-def visualize_grid_to_grid(att_map, grid_index, target, source, grid_size=32, alpha=0.6):
+def visualize_grid_to_grid(att_map, grid_index, target, source, filepath, index, grid_size=32, alpha=0.6):
     if not isinstance(grid_size, tuple):
         grid_size = (grid_size, grid_size)
     H,W = att_map.shape
@@ -173,9 +170,10 @@ def visualize_grid_to_grid(att_map, grid_index, target, source, grid_size=32, al
     ax[1].imshow(grid_source)
     ax[1].imshow(mask/np.max(mask), alpha=alpha, cmap='rainbow')
     ax[1].axis('off')
-    global imgIndex
-    save_path = './attnmap340_tits_'+str(imgIndex)+'.png'
-    imgIndex = imgIndex + 1
+
+    save_path =  filepath + '/attnmap_'+str(index)+'.png'
+
+    
     plt.savefig(save_path, bbox_inches='tight')
     plt.close(fig)  # 關閉圖表，以防止它在後台顯示
     
@@ -409,9 +407,10 @@ def p_sample_ddim(x, c, t, index, repeat_noise=False, use_original_steps=False, 
         model_t = model.apply_model(x, t, c)
         model_uncond = model.apply_model(x, t, unconditional_conditioning)
         model_output = model_uncond + unconditional_guidance_scale * (model_t - model_uncond)
+
     
     attn_map_cache.extend(get_local.cache['CrossAttention.forward'][0:46])
-        
+    get_local.clear()  
 
     if model.parameterization == "v":
         e_t = model.predict_eps_from_z_and_v(x, t, model_output)
@@ -455,7 +454,7 @@ def p_sample_ddim(x, c, t, index, repeat_noise=False, use_original_steps=False, 
 
 get_local.activate() 
 
-debugpy.listen(("0.0.0.0", 7777))
+debugpy.listen(("0.0.0.0", 7979))
 print("Waiting for client to attach...")
 debugpy.wait_for_client()
 
@@ -471,7 +470,7 @@ DataConf = DataConfig(args.DataConfigPath)
 DataConf.data.path = args.dataset_path
 
 # DataConf.data.train.batch_size = args.batch_size//2  #src -> tgt , tgt -> s
-batch_size = 1
+batch_size = args.batch_size
 DataConf.data.val.batch_size = batch_size
 
 val_dataset, train_dataset = deepfashion_data.get_train_val_dataloader(DataConf.data, labels_required = True, distributed = False)
@@ -484,7 +483,7 @@ path = "/workspace/ControlNet_idea1_2/" + dir
 # print("Files and directories in '", path, "' :")
 # # prints all files
 # print(dir_list)
-gpu = 0
+gpu = 1
 import os 
 os.environ['CUDA_VISIBLE_DEVICES'] = str(gpu)
 torch.cuda.set_device(gpu)
@@ -511,7 +510,8 @@ for ckpt in ckpt_list:
     strength = 1.0
     guess_mode = False
     count = 0
-    batch_size = 1
+    batch_size = args.batch_size
+    modelId = 0
 
     for x in val_dataset:
         count += batch_size
@@ -519,6 +519,7 @@ for ckpt in ckpt_list:
             batch_size = batch_size - (count - len(val_dataset.dataset))
 
         get_local.clear()
+        attn_map_cache = []
         with torch.no_grad():
             z, c = model.get_input(x, "nothing", bs=batch_size, is_inference = True)
             control =  c["c_concat"][0][:batch_size]
@@ -553,24 +554,32 @@ for ckpt in ckpt_list:
                 Image.fromarray(result).save(path)
                 index += 1
 
-        break
+        cache = get_local.cache
+        print(list(cache.keys()))
 
+        source, target = x['path'][0].split('_2_')
+        source += '.png'
+        target = target.split('_vis')[0] +'.png'
+        datasetDir = '/workspace/dataset/dataset/deepfashion/real_testDataset/test_256x256/'
+        filePath = './AttnMapImage/grid/model_' + str(modelId) + '/'
 
-    cache = get_local.cache
-    print(list(cache.keys()))
-    source = Image.open('./test2.png')
-    target = Image.open('./test.png')
-    attn_map = cache["CrossAttention.forward"]
-    attn_map = [np.expand_dims(item, axis=0) for item in attn_map]
-    # attn_map = attn_map.unsqueeze(0)
-    grid = 340
-    attn_layer = 4553-92
-    visualize_grid_to_grid(attn_map[attn_layer][0,0,:,:], grid, target, source)
-    visualize_grid_to_grid(attn_map[attn_layer][0,1,:,:], grid, target, source)
-    visualize_grid_to_grid(attn_map[attn_layer][0,2,:,:], grid, target, source)
-    visualize_grid_to_grid(attn_map[attn_layer][0,3,:,:], grid, target, source)
-    visualize_grid_to_grid(attn_map[attn_layer][0,4,:,:], grid, target, source)
-    visualize_grid_to_grid(attn_map[attn_layer][0,5,:,:], grid, target, source)
-    visualize_grid_to_grid(attn_map[attn_layer][0,6,:,:], grid, target, source)
-    visualize_grid_to_grid(attn_map[attn_layer][0,7,:,:], grid, target, source)
+        if not os.path.exists(filePath):
+            os.makedirs(filePath)
 
+        source = Image.open(datasetDir + source)
+        target = Image.open(datasetDir + target)
+
+        
+        
+        attn_map = attn_map_cache
+        attn_map = [np.expand_dims(item, axis=0) for item in attn_map]
+        # attn_map = attn_map.unsqueeze(0)
+        grid = 340
+        iterate = 50
+        attn_layer = 46 * iterate - 1
+        index = 0
+        for i in range(8):
+            visualize_grid_to_grid(attn_map[attn_layer][0,i,:,:], grid, target, source, filePath, index)
+            index += 1
+
+        modelId += 1
