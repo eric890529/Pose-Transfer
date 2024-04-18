@@ -66,8 +66,8 @@ for ckpt in ckpt_list:
     epoch = epoch.replace("=", "_")
 
     model = create_model('./models/idea4.yaml').cpu()
-    # model.load_state_dict(load_state_dict('./' + dir + ckpt, location='cpu'))
-    model.load_state_dict(load_state_dict('./models/idea4.ckpt', location='cpu'))
+    model.load_state_dict(load_state_dict('./' + dir + ckpt, location='cpu'))
+    # model.load_state_dict(load_state_dict('./models/idea4.ckpt', location='cpu'))
     
     
     model = model.cuda(gpu)
