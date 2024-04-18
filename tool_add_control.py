@@ -69,9 +69,9 @@ from cldm.model import create_model
 
 import debugpy
 
-debugpy.listen(("0.0.0.0", 7777))
-print("Waiting for client to attach...")
-debugpy.wait_for_client()
+# debugpy.listen(("0.0.0.0", 7777))
+# print("Waiting for client to attach...")
+# debugpy.wait_for_client()
 
 def get_node_name(name, parent_name):
     if len(name) <= len(parent_name):
@@ -81,7 +81,7 @@ def get_node_name(name, parent_name):
         return False, ''
     return True, name[len(parent_name):]
 
-vae_pretrained_weights = torch.load('/workspace/ControlNetWithDreamPoseCopy/VaeModel/vae-ft-mse-840000-ema-pruned.ckpt')
+vae_pretrained_weights = torch.load('./VaeModel/vae-ft-mse-840000-ema-pruned.ckpt')
 if 'state_dict' in vae_pretrained_weights:
     vae_pretrained_weights = vae_pretrained_weights['state_dict']
     

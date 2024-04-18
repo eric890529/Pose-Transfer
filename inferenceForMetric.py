@@ -22,9 +22,9 @@ import torchvision
 from PIL import Image
 
 
-# debugpy.listen(("0.0.0.0", 7979))
-# print("Waiting for client to attach...")
-# debugpy.wait_for_client()
+debugpy.listen(("0.0.0.0", 7979))
+print("Waiting for client to attach...")
+debugpy.wait_for_client()
 
 
 parser = argparse.ArgumentParser(description='help')
@@ -67,6 +67,8 @@ for ckpt in ckpt_list:
 
     model = create_model('./models/idea4.yaml').cpu()
     model.load_state_dict(load_state_dict('./' + dir + ckpt, location='cpu'))
+    
+    
     model = model.cuda(1)
     model.eval()
     ddim_sampler = DDIMSampler(model)
