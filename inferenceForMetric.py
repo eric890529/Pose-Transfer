@@ -82,12 +82,21 @@ for ckpt in ckpt_list:
             if config.save_memory:
                 model.low_vram_shift(is_diffusing=True)
 
+
+            import time
+            current_timestamp = time.time()
+            # print(current_timestamp)
             model.control_scales = [strength * (0.825 ** float(12 - i)) for i in range(13)] if guess_mode else ([strength] * 13)  # Magic number. IDK why. Perhaps because 0.825**12<0.01 but 0.826**12>0.01
             samples, intermediates = ddim_sampler.sample(ddim_steps, batch_size,
                                                             shape, cond, verbose=False, eta=0.0,
                                                             unconditional_guidance_scale=9.0,
                                                             unconditional_conditioning=uc_full)
 
+
+            end_timestamp = time.time()
+            print("time ")
+            print(end_timestamp - current_timestamp)
+            
             if config.save_memory:
                 model.low_vram_shift(is_diffusing=False)
 
