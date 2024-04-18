@@ -17,9 +17,9 @@ from ldm.modules.diffusionmodules.util import (
     timestep_embedding,
 )
 
-debugpy.listen(("0.0.0.0", 7777))
-print("Waiting for client to attach...")
-debugpy.wait_for_client()
+# debugpy.listen(("0.0.0.0", 7777))
+# print("Waiting for client to attach...")
+# debugpy.wait_for_client()
 
 
 import argparse
@@ -27,9 +27,10 @@ parser = argparse.ArgumentParser(description='help')
 parser.add_argument('--dataset_path', type=str, default='/workspace/dataset/dataset/deepfashion')
 parser.add_argument('--DataConfigPath', type=str, default='./dataConfig/data.yaml')
 parser.add_argument('--batch_size', type=int, default=12)
+parser.add_argument('--gpu', type=int, default=12)
 
 args = parser.parse_args()
-
+gpu = args.gpu
 DataConf = DataConfig(args.DataConfigPath)
 DataConf.data.path = args.dataset_path
 
@@ -38,8 +39,8 @@ DataConf.data.train.batch_size = args.batch_size//2  #src -> tgt , tgt -> src
 val_dataset, train_dataset = deepfashion_data.get_train_val_dataloader(DataConf.data, labels_required = True, distributed = False)
 
 # Configs
-resume_path = './models/idea4_VAE.ckpt'
-resume_path = './checkpoint_for_idea4_all/new_exp_sd21_epoch=187_step=579000.ckpt'
+resume_path = './models/idea4.ckpt'
+# resume_path = './checkpoint_for_idea4_all/new_exp_sd21_epoch=187_step=579000.ckpt'
 #batch_size = 2
 logger_freq = 3000
 learning_rate = 1e-5
@@ -100,7 +101,7 @@ checkpoint_callback = ModelCheckpoint(dirpath = directory,
 # dataset = MyDataset()
 # dataloader = DataLoader(dataset, num_workers=0, batch_size=batch_size, shuffle=True)
 logger = ImageLogger(batch_frequency=logger_freq)
-trainer = pl.Trainer(gpus=1, precision=32, callbacks=[logger, checkpoint_callback], accumulate_grad_batches=acc_size, resume_from_checkpoint = resume_path)# , resume_from_checkpoint = './checkpoint/last.ckpt' , resume_from_checkpoint = './checkpoint_for_diffusion/last.ckpt'
+trainer = pl.Trainer(accelerator="gpu", devices=[gpu], precision=32, callbacks=[logger, checkpoint_callback], accumulate_grad_batches=acc_size)# , resume_from_checkpoint = './checkpoint/last.ckpt' , resume_from_checkpoint = './checkpoint_for_diffusion/last.ckpt'
 #, resume_from_checkpoint = resume_path
 # Train!
 trainer.fit(model, train_dataset)

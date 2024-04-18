@@ -12,7 +12,7 @@ from attnVisualizer.visualizer import get_local
 try:
     import xformers
     import xformers.ops
-    XFORMERS_IS_AVAILBLE = True
+    XFORMERS_IS_AVAILBLE = False #True
 except:
     XFORMERS_IS_AVAILBLE = False
 
