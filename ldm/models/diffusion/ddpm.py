@@ -1047,7 +1047,7 @@ class LatentDiffusion(DDPM):
         plt.ylabel('loss')
         plt.xlabel('global_step')
         plt.legend()    
-        index = 1
+        index = 10
         filename = "idea4_all_attnFliter_Classifier_attnOnly" + str(index) + ".jpg"
         plt.savefig(os.path.join('lossCurve', filename))
     

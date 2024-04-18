@@ -58,6 +58,7 @@ path = "/workspace/ControlNet_idea1_2/" + dir
 import os 
 os.environ['CUDA_VISIBLE_DEVICES'] = "1"
 torch.cuda.set_device(1)
+
 for ckpt in ckpt_list:
     print("-------------------inference "+ dir + ckpt + "------------------------")
     eIdx = ckpt.find("epoch")
