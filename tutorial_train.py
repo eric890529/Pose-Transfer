@@ -44,7 +44,7 @@ resume_path = './models/idea4_attnFliter.ckpt'
 #batch_size = 2
 logger_freq = 4000
 learning_rate = 1e-5
-sd_locked = False #True
+sd_locked = True
 only_mid_control = False
 
 
@@ -91,6 +91,7 @@ directory = "checkpoint_for_idea4_all_attnFliter_Classifier_attnOnly"
 if not os.path.exists(directory):
     os.makedirs(directory)
 acc_size = 2
+
 checkpoint_callback = ModelCheckpoint(dirpath = directory,
                                       save_top_k = -1,
                                       every_n_train_steps=6000, save_last=True, #4000/1000
