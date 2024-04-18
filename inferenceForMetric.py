@@ -53,11 +53,11 @@ path = "/workspace/ControlNet_idea1_2/" + dir
 # print("Files and directories in '", path, "' :")
 # prints all files
 # print(dir_list)
-
+gpu = 0
 
 import os 
-os.environ['CUDA_VISIBLE_DEVICES'] = "1"
-torch.cuda.set_device(1)
+os.environ['CUDA_VISIBLE_DEVICES'] = str(gpu)
+torch.cuda.set_device(gpu)
 
 for ckpt in ckpt_list:
     print("-------------------inference "+ dir + ckpt + "------------------------")
@@ -66,10 +66,11 @@ for ckpt in ckpt_list:
     epoch = epoch.replace("=", "_")
 
     model = create_model('./models/idea4.yaml').cpu()
-    model.load_state_dict(load_state_dict('./' + dir + ckpt, location='cpu'))
+    # model.load_state_dict(load_state_dict('./' + dir + ckpt, location='cpu'))
+    model.load_state_dict(load_state_dict('./models/idea4.ckpt', location='cpu'))
     
     
-    model = model.cuda(1)
+    model = model.cuda(gpu)
     model.eval()
     ddim_sampler = DDIMSampler(model)
 
@@ -89,22 +90,29 @@ for ckpt in ckpt_list:
             batch_size = batch_size - (count - len(val_dataset.dataset))
         with torch.no_grad():
             z, c = model.get_input(x, "nothing", bs=batch_size, is_inference = True)
-            control =  c["c_concat"][0][:batch_size]
-            c_style = c["c_style"][0][:batch_size] #
+            control =  c["c_concat"][0][:batch_size].cuda(gpu)
+            c_style = c["c_style"][0][:batch_size].cuda(gpu) #
             cond = {"c_concat": [control], "c_style" : [c_style]}
             uc_cat = control * 0
             uc_style =  torch.zeros_like(c_style)
-            uc_full = {"c_concat": [uc_cat],  "c_style" : [uc_style]}
+            uc_full = {"c_concat": [uc_cat.cuda(gpu)],  "c_style" : [uc_style.cuda(gpu)]}
             shape = (4, DataConf.data.resolution // 8, DataConf.data.resolution // 8)
 
             if config.save_memory:
                 model.low_vram_shift(is_diffusing=True)
+
+            import time
+            current_timestamp = time.time()
 
             model.control_scales = [strength * (0.825 ** float(12 - i)) for i in range(13)] if guess_mode else ([strength] * 13)  # Magic number. IDK why. Perhaps because 0.825**12<0.01 but 0.826**12>0.01
             samples, intermediates = ddim_sampler.sample(ddim_steps, batch_size,
                                                             shape, cond, verbose=False, eta=0.0,
                                                             unconditional_guidance_scale=9.0,
                                                             unconditional_conditioning=uc_full)
+            
+            end_timestamp = time.time()
+            print("time calculate ")
+            print(end_timestamp - current_timestamp)
 
             if config.save_memory:
                 model.low_vram_shift(is_diffusing=False)
