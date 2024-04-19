@@ -12,7 +12,7 @@ from attnVisualizer.visualizer import get_local
 try:
     import xformers
     import xformers.ops
-    XFORMERS_IS_AVAILBLE = False #True
+    XFORMERS_IS_AVAILBLE = True
 except:
     XFORMERS_IS_AVAILBLE = False
 
@@ -219,7 +219,7 @@ class MemoryEfficientCrossAttention(nn.Module):
         self.to_out = nn.Sequential(nn.Linear(inner_dim, query_dim), nn.Dropout(dropout))
         self.attention_op: Optional[Any] = None
 
-    # @get_local('sim')
+    @get_local('sim')
     def forward(self, x, context=None, mask=None):
         q = self.to_q(x)
         context = default(context, x)
