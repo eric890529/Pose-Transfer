@@ -556,12 +556,12 @@ for ckpt in ckpt_list:
 
         cache = get_local.cache
         print(list(cache.keys()))
-
+        # for i in range(batch_size):
         source, target = x['path'][0].split('_2_')
         source += '.png'
         target = target.split('_vis')[0] +'.png'
         datasetDir = '/workspace/dataset/dataset/deepfashion/real_testDataset/test_256x256/'
-        filePath = './AttnMapImage/grid/model_' + str(modelId) + '/'
+        filePath = './AttnMapImage/test/model_' + str(modelId) + '/'
 
         if not os.path.exists(filePath):
             os.makedirs(filePath)
@@ -571,12 +571,26 @@ for ckpt in ckpt_list:
 
         
         
-        attn_map = attn_map_cache
+        attn_map = attn_map_cache[-46:]
+        # temp = []
+        # temp2 = [[] for i in range(batch_size)]
+
+        # for i in range(len(attn_map)):
+        #     temp = []
+        #     temp.extend(np.split(attn_map_cache[i], 2, axis = 0))
+        #     for j in range(len(temp)):
+        #         temp2[j].append(temp[j])
+        
+        # attn_map = []
+        # for i in range(len(temp2)):
+        #     attn_map.extend(temp2[i])
+            # np.concatenate((attn_map, temp2[i]), axis = 0)
+
         attn_map = [np.expand_dims(item, axis=0) for item in attn_map]
         # attn_map = attn_map.unsqueeze(0)
-        grid = 340
+        grid = 340+32+32-3
         iterate = 50
-        attn_layer = 46 * iterate - 1
+        attn_layer = 46 - 1
         index = 0
         for i in range(8):
             visualize_grid_to_grid(attn_map[attn_layer][0,i,:,:], grid, target, source, filePath, index)

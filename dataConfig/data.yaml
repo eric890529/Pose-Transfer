@@ -4,7 +4,7 @@ data:
     type: data.fashion_data::Dataset
     preprocess_mode: resize_and_crop
     path: /home/ankanbhunia/Downloads/pidm-demo/dataset/deepfashion
-    num_workers: 8
+    num_workers: 4
     sub_path: 256-256
     resolution: 256
     scale_param: 0.05
