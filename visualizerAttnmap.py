@@ -159,7 +159,7 @@ def visualize_grid_to_grid(att_map, grid_index, target, source, filepath, index,
     grid_source = highlight_grid(source, [grid_index], grid_size, False)
     
     mask = att_map[grid_index].reshape(grid_size[0], grid_size[1])
-    mask = Image.fromarray(mask).resize((target.size))
+    mask = Image.fromarray(mask).resize((176,256))
     
     fig, ax = plt.subplots(1, 2, figsize=(10,7))
     fig.tight_layout()
@@ -561,7 +561,7 @@ for ckpt in ckpt_list:
         source += '.png'
         target = target.split('_vis')[0] +'.png'
         datasetDir = '/workspace/dataset/dataset/deepfashion/real_testDataset/test_256x256/'
-        filePath = './AttnMapImage/test/model_' + str(modelId) + '/'
+        filePath = './AttnMapImage/grid/model_' + str(modelId) + '/'
 
         if not os.path.exists(filePath):
             os.makedirs(filePath)
@@ -569,6 +569,10 @@ for ckpt in ckpt_list:
         source = Image.open(datasetDir + source)
         target = Image.open(datasetDir + target)
 
+        resize = (176, 256)
+
+        source = source.resize(resize)
+        target = target.resize(resize)
         
         
         attn_map = attn_map_cache[-46:]
