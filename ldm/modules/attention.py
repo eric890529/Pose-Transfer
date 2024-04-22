@@ -235,7 +235,7 @@ class CrossAttention(nn.Module):
        
         return hidden_states
     
-    @get_local('attention_probs')
+    # @get_local('attention_probs')
     def forward(self, x, context=None, mask=None):
         h = self.heads
         q = self.to_q(x)

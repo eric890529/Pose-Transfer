@@ -59,13 +59,20 @@ def grid_show(to_shows, cols):
             axs[i, j].set_xticks([])
     plt.show()
 
-def visualize_head(att_map):
+def visualize_head(att_map, i):
     ax = plt.gca()
     # Plot the heatmap
     im = ax.imshow(att_map)
     # Create colorbar
     cbar = ax.figure.colorbar(im, ax=ax)
-    plt.show()
+
+    filePath = './AttnMapImage/test/test' + str(i) + '.png'
+    # save_path =  filePath + 'attnmap_'+str(index)+'.png'
+
+    
+    plt.savefig(filePath, bbox_inches='tight')
+    plt.close()  # 關閉圖表，以防止它在後台顯
+    # plt.show()
     
 def visualize_heads(att_map, cols):
     to_shows = []
@@ -483,7 +490,7 @@ path = "/workspace/ControlNet_idea1_2/" + dir
 # print("Files and directories in '", path, "' :")
 # # prints all files
 # print(dir_list)
-gpu = 1
+gpu = 0
 import os 
 os.environ['CUDA_VISIBLE_DEVICES'] = str(gpu)
 torch.cuda.set_device(gpu)
@@ -597,6 +604,7 @@ for ckpt in ckpt_list:
         attn_layer = 46 - 1
         index = 0
         for i in range(8):
+            visualize_head(attn_map[attn_layer][0,i], i)
             visualize_grid_to_grid(attn_map[attn_layer][0,i,:,:], grid, target, source, filePath, index)
             index += 1
 

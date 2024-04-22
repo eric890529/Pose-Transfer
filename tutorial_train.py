@@ -17,9 +17,9 @@ from ldm.modules.diffusionmodules.util import (
     timestep_embedding,
 )
 
-# debugpy.listen(("0.0.0.0", 7979))
-# print("Waiting for client to attach...")
-# debugpy.wait_for_client()
+debugpy.listen(("0.0.0.0", 7979))
+print("Waiting for client to attach...")
+debugpy.wait_for_client()
 
 
 import argparse
@@ -40,7 +40,7 @@ val_dataset, train_dataset = deepfashion_data.get_train_val_dataloader(DataConf.
 
 # Configs
 resume_path = './models/idea4_attnFliter.ckpt'
-# resume_path = './checkpoint_for_idea4_all_attnFliter_Classifier/new_exp_sd21_epoch=116_step=432000.ckpt'
+# resume_path = './checkpoint_for_idea4_all_attnFliter_Classifier_attnOnly/new_exp_sd21_epoch=103_step=384000.ckpt'
 #batch_size = 2
 logger_freq = 4000
 learning_rate = 1e-5
