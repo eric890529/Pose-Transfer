@@ -7,7 +7,7 @@ from einops import rearrange, repeat
 from typing import Optional, Any
 
 from ldm.modules.diffusionmodules.util import checkpoint
-from attnVisualizer.visualizer import get_local
+# from attnVisualizer.visualizer import get_local
 
 try:
     import xformers
@@ -228,7 +228,7 @@ class CrossAttention(nn.Module):
             sim = einsum('b i d, b j d -> b i j', q, k) * self.scale
         return sim
     
-    @get_local('channel_attention_probs')
+    # @get_local('channel_attention_probs')
     def forward(self, x, context=None, mask=None):
         h = self.heads
 
