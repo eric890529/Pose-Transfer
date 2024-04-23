@@ -28,6 +28,7 @@ from ldm.modules.diffusionmodules.util import make_beta_schedule, extract_into_t
 from ldm.models.diffusion.ddim import DDIMSampler
 
 import torch.nn.functional as F
+import csv
 
 
 __conditioning_keys__ = {'concat': 'c_concat',
@@ -1013,22 +1014,42 @@ class LatentDiffusion(DDPM):
         #     self.step_curve.append(self.global_step)
         #     self.losses_curve.append(loss.data.cpu().numpy())
         #     self.draw_loss_curve(self.losses_curve,self.step_curve)
-        if self.global_step % 3084 == 0: ##1000/4 accmulate gradient
-            if len(self.losses_curve) == 0:
-                self.losses_curve.append(loss.data.cpu().numpy())
-            elif self.global_step not in step_record:
-                self.step_curve.append(self.global_step)
-                # self.losses_curve.append(loss.data.cpu().numpy())
-                losses_curve_list.append(sum(self.losses_curve)/len(self.losses_curve))
-                self.draw_loss_curve(losses_curve_list, self.step_curve)
-                step_record.append(self.global_step)
-                self.losses_curve = []
-            else:
-                self.losses_curve.append(loss.data.cpu().numpy())
-        else:
-                self.losses_curve.append(loss.data.cpu().numpy())
+
+    
+        self.record_loss_txt(loss, self.global_step)
+        
+
+        # if self.global_step % 3084 == 0: ##1000/4 accmulate gradient
+        #     if len(self.losses_curve) == 0:
+        #         self.losses_curve.append(loss.data.cpu().numpy())
+        #     elif self.global_step not in step_record:
+        #         self.step_curve.append(self.global_step)
+        #         # self.losses_curve.append(loss.data.cpu().numpy())
+        #         losses_curve_list.append(sum(self.losses_curve)/len(self.losses_curve))
+        #         self.draw_loss_curve(losses_curve_list, self.step_curve)
+        #         step_record.append(self.global_step)
+        #         self.losses_curve = []
+        #     else:
+        #         self.losses_curve.append(loss.data.cpu().numpy())
+        # else:
+        #         self.losses_curve.append(loss.data.cpu().numpy())
 
         return loss, loss_dict
+    
+    def record_loss_txt(self, loss, step, file_path='noctrl_training_log.csv'):
+        # Check if the CSV file already exists. If not, write the header
+        try:
+            with open(file_path, 'x', newline='') as csvfile:
+                writer = csv.writer(csvfile)
+                writer.writerow(['Step', 'Loss'])  # Write the header
+        except FileExistsError:
+            pass  # If the file exists, we don't need to write the header
+
+        # Write the training step and loss to the CSV file
+        with open(file_path, 'a', newline='') as csvfile:
+            writer = csv.writer(csvfile)
+            writer.writerow([step, loss.item()])  # Write the data
+
     
     def draw_loss_curve(self, losses_curve,step):
         import matplotlib.pyplot as plt
