@@ -44,14 +44,14 @@ class ControlledUnetModel(UNetModel):
         mid_cond_emb = cond_style[-1]
         dec_cond_emb = cond_style
         
-        with torch.no_grad():
-            t_emb = timestep_embedding(timesteps, self.model_channels, repeat_only=False)
-            emb = self.time_embed(t_emb)
-            h = x.type(self.dtype)
-            for i, module in enumerate(self.input_blocks):
-                h = module(h, emb, cond = enc_cond_emb[i])
-                hs.append(h)
-            h = self.middle_block(h, emb, cond = mid_cond_emb)
+        # with torch.no_grad():
+        t_emb = timestep_embedding(timesteps, self.model_channels, repeat_only=False)
+        emb = self.time_embed(t_emb)
+        h = x.type(self.dtype)
+        for i, module in enumerate(self.input_blocks):
+            h = module(h, emb, cond = enc_cond_emb[i])
+            hs.append(h)
+        h = self.middle_block(h, emb, cond = mid_cond_emb)
 
         if control is not None:
             h += control.pop()
