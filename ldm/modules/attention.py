@@ -7,7 +7,7 @@ from einops import rearrange, repeat
 from typing import Optional, Any
 
 from ldm.modules.diffusionmodules.util import checkpoint
-from attnVisualizer.visualizer import get_local
+# from attnVisualizer.visualizer import get_local
 
 try:
     import xformers

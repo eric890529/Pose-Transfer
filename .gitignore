@@ -13,6 +13,7 @@ deepfashion_dataset/
 *.pt
 *.ckpt
 *.safetensors
+*.zip
 
 gradio_pose2image_private.py
 gradio_canny2image_private.py

@@ -1021,20 +1021,20 @@ class LatentDiffusion(DDPM):
         #     self.losses_curve.append(loss.data.cpu().numpy())
         #     self.draw_loss_curve(self.losses_curve,self.step_curve)
         
-        # if self.global_step % 3000 == 0: ##1000/4 accmulate gradient
-        #     if len(self.losses_curve) == 0:
-        #         self.losses_curve.append(loss.data.cpu().numpy())
-        #     elif self.global_step not in step_record:
-        #         self.step_curve.append(self.global_step)
-        #         # self.losses_curve.append(loss.data.cpu().numpy())
-        #         losses_curve_list.append(sum(self.losses_curve)/len(self.losses_curve))
-        #         self.draw_loss_curve(losses_curve_list, self.step_curve)
-        #         step_record.append(self.global_step)
-        #         self.losses_curve = []
-        #     else:
-        #         self.losses_curve.append(loss.data.cpu().numpy())
-        # else:
-        #         self.losses_curve.append(loss.data.cpu().numpy())
+        if self.global_step % 3500 == 0: ##1000/4 accmulate gradient
+            if len(self.losses_curve) == 0:
+                self.losses_curve.append(loss.data.cpu().numpy())
+            elif self.global_step not in step_record:
+                self.step_curve.append(self.global_step)
+                # self.losses_curve.append(loss.data.cpu().numpy())
+                losses_curve_list.append(sum(self.losses_curve)/len(self.losses_curve))
+                self.draw_loss_curve(losses_curve_list, self.step_curve)
+                step_record.append(self.global_step)
+                self.losses_curve = []
+            else:
+                self.losses_curve.append(loss.data.cpu().numpy())
+        else:
+                self.losses_curve.append(loss.data.cpu().numpy())
 
         return loss, loss_dict
     
@@ -1048,7 +1048,7 @@ class LatentDiffusion(DDPM):
         plt.ylabel('loss')
         plt.xlabel('global_step')
         plt.legend()    
-        index = 11
+        index = 2
         filename = "idea4_all_attnFliter_Classifier_attnOnly" + str(index) + ".jpg"
         plt.savefig(os.path.join('lossCurve', filename))
     

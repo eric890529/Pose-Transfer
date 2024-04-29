@@ -81,7 +81,7 @@ def get_node_name(name, parent_name):
         return False, ''
     return True, name[len(parent_name):]
 
-vae_pretrained_weights = torch.load('./VaeModel/vae-ft-mse-840000-ema-pruned.ckpt')
+vae_pretrained_weights = torch.load('./VaeModel/vae-ft-mse-840000-ema-pruned.ckpt') # vae-ft-mse-840000-ema-pruned是fine tune過人臉的ckpt
 if 'state_dict' in vae_pretrained_weights:
     vae_pretrained_weights = vae_pretrained_weights['state_dict']
     
