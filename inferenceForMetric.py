@@ -17,6 +17,7 @@ import argparse
 import debugpy
 import os
 from ldm.models.diffusion.ddim import DDIMSampler
+from torchvision.utils import save_image
 
 import torchvision
 from PIL import Image
@@ -26,11 +27,22 @@ debugpy.listen(("0.0.0.0", 7979))
 print("Waiting for client to attach...")
 debugpy.wait_for_client()
 
+# 正規化
+import torchvision.transforms as transforms
+mean = torch.tensor([0.5, 0.5, 0.5], dtype=torch.float32)
+std = torch.tensor([0.5, 0.5, 0.5], dtype=torch.float32)
+denorm = transforms.Normalize(mean=[-m / s for m, s in zip(mean, std)],
+                            std=[1.0 / s for s in std])
+
 
 parser = argparse.ArgumentParser(description='help')
 parser.add_argument('--dataset_path', type=str, default='/workspace/dataset/dataset/deepfashion')
 parser.add_argument('--DataConfigPath', type=str, default='./dataConfig/data.yaml')
 parser.add_argument('--batch_size', type=int, default=25)
+
+
+# parser.add_argument('--dataset_path', type=str, default='/workspace/dataset/dataset/customDataset')
+# parser.add_argument('--DataConfigPath', type=str, default='./dataConfig/customData.yaml')
 
 args = parser.parse_args()
 
@@ -46,21 +58,22 @@ val_dataset, train_dataset = deepfashion_data.get_train_val_dataloader(DataConf.
 ckpt_list = ["new_exp_sd21_epoch=200_step=744000.ckpt"]
 
 
-dir = "checkpoint_for_idea4_all_attnFliter_Classifier/"
-path = "/workspace/ControlNet_idea1_2/" + dir
+dir = "checkpoint_for_idea4_all_attnFliter_only_Attn/"
 
+
+# path = "/workspace/ControlNet_idea1_2/" + dir
 # dir_list = os.listdir(path)
 # print("Files and directories in '", path, "' :")
 # prints all files
 # print(dir_list)
-gpu = 0
+gpu = 1
 
 import os 
 os.environ['CUDA_VISIBLE_DEVICES'] = str(gpu)
 torch.cuda.set_device(gpu)
 
 for ckpt in ckpt_list:
-    print("-------------------inference "+ dir + ckpt + "------------------------")
+    print("-------------------inference "+ dir + ckpt + "---------------------------")
     eIdx = ckpt.find("epoch")
     epoch = ckpt[eIdx:eIdx+9]
     epoch = epoch.replace("=", "_")
@@ -90,12 +103,16 @@ for ckpt in ckpt_list:
             batch_size = batch_size - (count - len(val_dataset.dataset))
         with torch.no_grad():
             z, c = model.get_input(x, "nothing", bs=batch_size, is_inference = True)
+            rec = model.decode_first_stage(z)
+
             control =  c["c_concat"][0][:batch_size].cuda(gpu)
             c_style = c["c_style"][0][:batch_size].cuda(gpu) #
             cond = {"c_concat": [control], "c_style" : [c_style]}
+
             uc_cat = control * 0
             uc_style =  torch.zeros_like(c_style)
             uc_full = {"c_concat": [uc_cat.cuda(gpu)],  "c_style" : [uc_style.cuda(gpu)]}
+
             shape = (4, DataConf.data.resolution // 8, DataConf.data.resolution // 8)
 
             if config.save_memory:
@@ -121,13 +138,43 @@ for ckpt in ckpt_list:
             x_samples = (einops.rearrange(x_samples, 'b c h w -> b h w c') * 127.5 + 127.5).cpu().numpy().clip(0, 255).astype(np.uint8)
 
             results = [x_samples[i] for i in range(batch_size)]
-            path = './inferenceValDataset_idea4_all_attnFliter_Classifier_r4p4_' + epoch 
+
+            path = './image_log/DanceApp/dance_test_' + epoch  
             if not os.path.exists(path):
                 os.makedirs(path)
+                os.makedirs(path + '/sample')
+                os.makedirs(path + '/condition')
+                os.makedirs(path + '/pose')
+                os.makedirs(path + '/rec')
+
             index = 0
             for result in results:
-                path = './inferenceValDataset_idea4_all_attnFliter_Classifier_r4p4_' + epoch 
-                path = path + '/' + x["path"][index]
-                Image.fromarray(result).save(path)
+                path = './image_log/DanceApp/test_' + epoch 
+                savefile = path + '/sample/' + x["path"][index]
+                Image.fromarray(result).save(savefile) # sample image
+
+        
+                _, pose, _ = torch.split(control[index], [3,3,17], dim = 0)
+                savefile = path + '/rec/' + x["path"][index]
+                save_image(denorm(rec[index]), savefile)
+
+                savefile = path + '/pose/' + x["path"][index]
+                save_image(pose, savefile)
+
+                savefile = path + '/condition/' + x["path"][index]
+                save_image(denorm(c_style[index]), savefile)
+                # Image.fromarray(rec[index]).save("rec_" + path) # rec image
+                # Image.fromarray(control[index]).save("control_" + path) # pose image
+                # Image.fromarray(c_style[index]).save("condition" + path) # condition image
                 index += 1
+        
+            # path = './inferenceValDataset_idea4_all_attnFliter_Classifier_r4p4_' + epoch 
+            # if not os.path.exists(path):
+            #     os.makedirs(path)
+            # index = 0
+            # for result in results:
+            #     path = './inferenceValDataset_idea4_all_attnFliter_Classifier_r4p4_' + epoch 
+            #     path = path + '/' + x["path"][index]
+            #     Image.fromarray(result).save(path)
+            #     index += 1
         
