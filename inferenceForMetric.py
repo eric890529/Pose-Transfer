@@ -21,7 +21,7 @@ import torchvision
 from PIL import Image
 
 
-# debugpy.listen(("0.0.0.0", 7777))
+# debugpy.listen(("0.0.0.0", 7979))
 # print("Waiting for client to attach...")
 # debugpy.wait_for_client()
 
@@ -49,18 +49,16 @@ val_dataset, train_dataset = dance_data.get_train_val_dataloader(DataConf.data, 
 
 ckpt_list = ["new_exp_sd21_epoch=200_step=744000.ckpt"]
 
-ckptDir = '/checkpoint_for_idea4_all_attnFliter/'
-path = "/workspace/ControlNet_idea1_2" + ckptDir
-dir_list = os.listdir(path)
-print("Files and directories in '", path, "' :")
-# prints all files
-print(dir_list)
+ckptDir = '/checkpoint_for_idea4_all_attnFliter_only_Attn/'
+# path = "/workspace/ControlNet_idea1_2" + ckptDir
+# dir_list = os.listdir(path)
 
+##設定GPU
 import os 
 os.environ['CUDA_VISIBLE_DEVICES'] = "1"
 torch.cuda.set_device(1)
 
-for ckpt in dir_list:
+for ckpt in ckpt_list:
     eIdx = ckpt.find("epoch")
     epoch = ckpt[eIdx:eIdx+9]
     epoch = epoch.replace("=", "_")

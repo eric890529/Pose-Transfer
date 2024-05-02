@@ -36,7 +36,7 @@ class Dataset(Dataset):
         # if not self.env:
         #     raise IOError('Cannot open lmdb dataset', path)
 
-        self.file_path = 'train_pairs.csv' if not is_inference else 'application_pairs.csv'
+        self.file_path = 'train_pairs.csv' if not is_inference else 'application_pairs3.csv'
         self.data = self.get_paths(self.root, self.file_path)
         self.is_inference = is_inference
         self.preprocess_mode = opt.preprocess_mode
@@ -62,8 +62,8 @@ class Dataset(Dataset):
         for item in lines:
             dict_item={}
             item = item.strip().split(',')
-            item[0] = self.root+'/DanceAllDataPng/'+item[0]
-            item[1] = self.root+'/DanceAllDataPng/'+item[1]
+            item[0] = self.root+'/DanceDataWithPlusModel/'+item[0]
+            item[1] = self.root+'/DanceDataWithPlusModel/'+item[1]
             dict_item['source_image'] = [path.replace('.jpg', '.png') for path in item[1:]]
             dict_item['source_label'] = [os.path.join(self.semantic_path, self.img_to_label(path)) for path in dict_item['source_image']]
             dict_item['target_image'] = item[0].replace('.jpg', '.png')
@@ -156,7 +156,7 @@ class Dataset(Dataset):
         return path_names
 
     def img_to_label(self, path):
-        return path.replace('img/', 'pose/').replace('.png', '.txt').replace('DanceAllDataPng', 'poseData')
+        return path.replace('img/', 'pose/').replace('.png', '.txt').replace('DanceDataWithPlusModel', 'poseData')
 
     def get_image_tensor(self, path):
         with self.env.begin(write=False) as txn:
