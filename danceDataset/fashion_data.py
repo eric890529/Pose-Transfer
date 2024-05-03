@@ -36,7 +36,7 @@ class Dataset(Dataset):
         # if not self.env:
         #     raise IOError('Cannot open lmdb dataset', path)
 
-        self.file_path = 'train_pairs.csv' if not is_inference else 'application_pairs3.csv'
+        self.file_path = 'train_pairs.csv' if not is_inference else 'men2ToPopingBoy4.csv'
         self.data = self.get_paths(self.root, self.file_path)
         self.is_inference = is_inference
         self.preprocess_mode = opt.preprocess_mode
@@ -150,10 +150,10 @@ class Dataset(Dataset):
         path_in = path_in.split('img/')[-1]
         path_in = os.path.join('fashion', path_in)
         path_names = path_in.split('/') 
-        path_names[3] = path_names[3].replace('_', '')
-        path_names[4] = path_names[4].split('_')[0] + "_" + "".join(path_names[4].split('_')[1:])
-        path_names = "".join(path_names)
-        return path_names
+        # path_names[3] = path_names[3].replace('_', '')
+        # path_names[4] = path_names[4].split('_')[0] + "_" + "".join(path_names[4].split('_')[1:])
+        # path_names = "".join(path_names)
+        return path_names[-1]
 
     def img_to_label(self, path):
         return path.replace('img/', 'pose/').replace('.png', '.txt').replace('DanceDataWithPlusModel', 'poseData')
