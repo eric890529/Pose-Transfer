@@ -582,9 +582,9 @@ class ControlLDM(LatentDiffusion):
     
 
     def configure_optimizers(self):
-        lr = self.learning_rate
-        transform_param = self.extractAttnParam(self.model.diffusion_model)
-        params =  list(self.control_model.parameters() )+ list(self.style_encoder.parameters())  
+        lr = self.learning_rate # self.model.diffusion_model.output_blocks[3][1]
+        transform_param = self.extractAttnParam(self.model.diffusion_model)#self.model.diffusion_model.input_blocks[1][1]
+        params =  list(self.control_model.parameters())+ list(self.style_encoder.parameters())  
               # #list(self.first_stage_model.parameters()) +  list(self.adapter.parameters())
         for p in transform_param:
             params += list(p)

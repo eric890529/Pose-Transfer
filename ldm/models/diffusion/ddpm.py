@@ -26,7 +26,8 @@ from ldm.modules.distributions.distributions import normal_kl, DiagonalGaussianD
 from ldm.models.autoencoder import IdentityFirstStage, AutoencoderKL
 from ldm.modules.diffusionmodules.util import make_beta_schedule, extract_into_tensor, noise_like
 from ldm.models.diffusion.ddim import DDIMSampler
-
+from ldm.modules.attention import SpatialTransformer
+import copy
 
 __conditioning_keys__ = {'concat': 'c_concat',
                          'crossattn': 'c_crossattn',
@@ -623,10 +624,19 @@ class LatentDiffusion(DDPM):
     @rank_zero_only
     @torch.no_grad()
     def on_train_batch_start(self, batch, batch_idx ):#dataloader_idx
-        #print("start")
-        # import copy
-        # global old_diffusion_model 
-        # old_diffusion_model = copy.deepcopy(self.model)
+        print("start")
+        
+        # global input_attn 
+        # input_attn = copy.deepcopy(self.model.diffusion_model.input_blocks[1][1])
+        # global output_attn 
+        # output_attn = copy.deepcopy(self.model.diffusion_model.output_blocks[3][1])
+        global attn
+        attn = self.extractAttn(self.model.diffusion_model)
+        # /temp = self.getModelAttnParam(self.model.diffusion_model)
+        # print("compare before")
+        # for index, (attn1, attn2) in enumerate(zip(temp, attn)):
+        #     self.cmp_model(attn1, attn2, "attn " + str(index))
+        # print("compare before end")
         # global old_first_stage_model 
         # old_first_stage_model = copy.deepcopy(self.first_stage_model)
         # global old_cond_stage_model 
@@ -650,22 +660,43 @@ class LatentDiffusion(DDPM):
             print(f"setting self.scale_factor to {self.scale_factor}")
             print("### USING STD-RESCALING ###")
             
-    # def on_train_batch_end(self, *args, **kwargs):
-    #     self.cmp_model(old_diffusion_model, self.model, "self.model")
-        # self.cmp_model(old_first_stage_model, self.first_stage_model, "first_stage_model")
+    def on_train_batch_end(self, *args, **kwargs):
+        # self.cmp_model(input_attn, self.model.diffusion_model.input_blocks[1][1], "input attn")
+        # self.cmp_model(output_attn, self.model.diffusion_model.output_blocks[3][1], "output attn")
+        temp = self.getModelAttnParam(self.model.diffusion_model)
+        for index, (attn1, attn2) in enumerate(zip(temp, attn)):
+            self.cmp_model(attn1, attn2, "attn " + str(index))
         # self.cmp_model(old_cond_stage_model, self.cond_stage_model, "cond_stage_model")
         # self.cmp_model(old_control_model, self.control_model, "control_model")
         # self.cmp_model(old_style_encoder, self.style_encoder, "style_encoder")
     #     #print("end")
+
+    def extractAttn(self, model):
+        spatial_transformer_params = []
+        # 遍历模型的所有子模块，并检查它们是否为 SpatialTransformer 的实例
+        for name, module in model.named_modules():
+            if isinstance(module, SpatialTransformer):
+                # 如果是 SpatialTransformer 实例，则将其参数添加到列表中
+                spatial_transformer_params.append(copy.deepcopy(module))
+        return spatial_transformer_params
+    
+    def getModelAttnParam(self, model):
+        spatial_transformer_params = []
+        # 遍历模型的所有子模块，并检查它们是否为 SpatialTransformer 的实例
+        for name, module in model.named_modules():
+            if isinstance(module, SpatialTransformer):
+                # 如果是 SpatialTransformer 实例，则将其参数添加到列表中
+                spatial_transformer_params.append(module)
+        return spatial_transformer_params
         
         
-    # def cmp_model(self, model1, model2, model_name ) :
-    #     param1 = model1.named_parameters()
-    #     param2 = model2.named_parameters()
-    #     for p1, p2 in zip( param1, param2 ) :
-    #         if not torch.equal( p1[1], p2[1] ) :
-    #             print( model_name + ' change' )
-    #             break
+    def cmp_model(self, model1, model2, model_name ) :
+        param1 = model1.named_parameters()
+        param2 = model2.named_parameters()
+        for p1, p2 in zip( param1, param2 ) :
+            if not torch.equal( p1[1], p2[1] ) :
+                print( model_name + ' change' )
+                break
         # tempList = []
         # tempList2 = []
         
@@ -681,8 +712,6 @@ class LatentDiffusion(DDPM):
         #     # if not tempList[i].equal(tempList2[i]):
         #     #     print(model_name + " change")
             
-        # if self.use_ema:
-        #     self.model_ema(self.model)
 
                 
     def register_schedule(self,
