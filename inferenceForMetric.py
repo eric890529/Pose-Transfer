@@ -21,6 +21,7 @@ from torchvision.utils import save_image
 
 import torchvision
 from PIL import Image
+import cv2
 
 
 # debugpy.listen(("0.0.0.0", 7979))
@@ -36,13 +37,13 @@ denorm = transforms.Normalize(mean=[-m / s for m, s in zip(mean, std)],
 
 
 parser = argparse.ArgumentParser(description='help')
-parser.add_argument('--dataset_path', type=str, default='/workspace/dataset/dataset/deepfashion')
-parser.add_argument('--DataConfigPath', type=str, default='./dataConfig/data.yaml')
+# parser.add_argument('--dataset_path', type=str, default='/workspace/dataset/dataset/deepfashion')
+# parser.add_argument('--DataConfigPath', type=str, default='./dataConfig/data.yaml')
 parser.add_argument('--batch_size', type=int, default=25)
 
 
-# parser.add_argument('--dataset_path', type=str, default='/workspace/dataset/dataset/customDataset')
-# parser.add_argument('--DataConfigPath', type=str, default='./dataConfig/customData.yaml')
+parser.add_argument('--dataset_path', type=str, default='/workspace/dataset/dataset/customDataset')
+parser.add_argument('--DataConfigPath', type=str, default='./dataConfig/customData.yaml')
 parser.add_argument('--name', type=str, default='test')
 
 args = parser.parse_args()
@@ -110,9 +111,9 @@ for ckpt in ckpt_list:
             c_style = c["c_style"][0][:batch_size].cuda(gpu) #
             cond = {"c_concat": [control], "c_style" : [c_style]}
 
-            uc_cat = control * 0
-            uc_style =  torch.zeros_like(c_style)
-            uc_full = {"c_concat": [uc_cat.cuda(gpu)],  "c_style" : [uc_style.cuda(gpu)]}
+            # uc_cat = control * 0
+            # uc_style =  torch.zeros_like(c_style)
+            uc_full = {"c_concat": [control],  "c_style" : [c_style]}
 
             shape = (4, DataConf.data.resolution // 8, DataConf.data.resolution // 8)
 
@@ -151,18 +152,19 @@ for ckpt in ckpt_list:
             index = 0
             for result in results:
                 savefile = path + '/sample/' + x["path"][index]
-                Image.fromarray(result).save(savefile) # sample image
+                temp = cv2.resize(result, dsize=(176, 256), interpolation=cv2.INTER_CUBIC)
+                Image.fromarray(temp).save(savefile) # sample image
 
-        
+                resize = torchvision.transforms.Resize([256,176])
                 _, pose, _ = torch.split(control[index], [3,3,17], dim = 0)
                 savefile = path + '/rec/' + x["path"][index]
-                save_image(denorm(rec[index]), savefile)
+                save_image(resize(denorm(rec[index])), savefile)
 
                 savefile = path + '/pose/' + x["path"][index]
-                save_image(pose, savefile)
+                save_image(resize(pose), savefile)
 
                 savefile = path + '/condition/' + x["path"][index]
-                save_image(denorm(c_style[index]), savefile)
+                save_image(resize(denorm(c_style[index])), savefile)
                 # Image.fromarray(rec[index]).save("rec_" + path) # rec image
                 # Image.fromarray(control[index]).save("control_" + path) # pose image
                 # Image.fromarray(c_style[index]).save("condition" + path) # condition image
