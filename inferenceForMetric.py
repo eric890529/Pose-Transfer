@@ -36,13 +36,13 @@ denorm = transforms.Normalize(mean=[-m / s for m, s in zip(mean, std)],
 
 
 parser = argparse.ArgumentParser(description='help')
-# parser.add_argument('--dataset_path', type=str, default='/workspace/dataset/dataset/deepfashion')
-# parser.add_argument('--DataConfigPath', type=str, default='./dataConfig/data.yaml')
+parser.add_argument('--dataset_path', type=str, default='/workspace/dataset/dataset/deepfashion')
+parser.add_argument('--DataConfigPath', type=str, default='./dataConfig/data.yaml')
 parser.add_argument('--batch_size', type=int, default=25)
 
 
-parser.add_argument('--dataset_path', type=str, default='/workspace/dataset/dataset/customDataset')
-parser.add_argument('--DataConfigPath', type=str, default='./dataConfig/customData.yaml')
+# parser.add_argument('--dataset_path', type=str, default='/workspace/dataset/dataset/customDataset')
+# parser.add_argument('--DataConfigPath', type=str, default='./dataConfig/customData.yaml')
 parser.add_argument('--name', type=str, default='test')
 
 args = parser.parse_args()
@@ -56,10 +56,10 @@ DataConf.data.val.batch_size = batch_size
 
 val_dataset, train_dataset = deepfashion_data.get_train_val_dataloader(DataConf.data, labels_required = True, distributed = False)
 
-ckpt_list = ["new_exp_sd21_epoch=200_step=744000.ckpt"]
+ckpt_list = ["new_exp_sd21_epoch=197_step=732000.ckpt"]
 
 
-dir = "checkpoint_for_idea4_all_attnFliter/"
+dir = "checkpoint_for_idea4_all_attnFliter_only_Attn/"
 
 
 # path = "/workspace/ControlNet_idea1_2/" + dir
@@ -67,7 +67,7 @@ dir = "checkpoint_for_idea4_all_attnFliter/"
 # print("Files and directories in '", path, "' :")
 # prints all files
 # print(dir_list)
-gpu = 1
+gpu = 0
 
 import os 
 os.environ['CUDA_VISIBLE_DEVICES'] = str(gpu)

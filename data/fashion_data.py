@@ -36,7 +36,7 @@ class Dataset(Dataset):
         # if not self.env:
         #     raise IOError('Cannot open lmdb dataset', path)
 
-        self.file_path = 'train_pairs.txt' if not is_inference else 'test_pairs.txt'
+        self.file_path = 'train_pairs.txt' if not is_inference else 'fake.txt'
         self.data = self.get_paths(self.root, self.file_path)
         self.is_inference = is_inference
         self.preprocess_mode = opt.preprocess_mode
