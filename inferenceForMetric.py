@@ -57,10 +57,10 @@ DataConf.data.val.batch_size = batch_size
 
 val_dataset, train_dataset = deepfashion_data.get_train_val_dataloader(DataConf.data, labels_required = True, distributed = False)
 
-ckpt_list = ["new_exp_sd21_epoch=197_step=732000.ckpt"]
+ckpt_list = ["new_exp_sd21_epoch=10_step=012000.ckpt"]
 
 
-dir = "checkpoint_for_idea4_all_attnFliter_only_Attn/"
+dir = "checkpoint_for_idea4_all_attnFliter_DanceData/"
 
 
 # path = "/workspace/ControlNet_idea1_2/" + dir
