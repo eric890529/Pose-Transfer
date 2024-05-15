@@ -28,6 +28,7 @@ from ldm.modules.diffusionmodules.util import make_beta_schedule, extract_into_t
 from ldm.models.diffusion.ddim import DDIMSampler
 from ldm.modules.attention import SpatialTransformer
 import copy
+import csv
 
 __conditioning_keys__ = {'concat': 'c_concat',
                          'crossattn': 'c_crossattn',
@@ -614,6 +615,8 @@ class LatentDiffusion(DDPM):
         step_record = []
         global losses_curve_list
         losses_curve_list = []
+        global step_count
+        step_count = 0
         ##
 
     def make_cond_schedule(self, ):
@@ -624,14 +627,14 @@ class LatentDiffusion(DDPM):
     @rank_zero_only
     @torch.no_grad()
     def on_train_batch_start(self, batch, batch_idx ):#dataloader_idx
-        print("start")
+        # print("start")
         
         # global input_attn 
         # input_attn = copy.deepcopy(self.model.diffusion_model.input_blocks[1][1])
         # global output_attn 
         # output_attn = copy.deepcopy(self.model.diffusion_model.output_blocks[3][1])
-        global attn
-        attn = self.extractAttn(self.model.diffusion_model)
+        # global attn
+        # attn = self.extractAttn(self.model.diffusion_model)
         # /temp = self.getModelAttnParam(self.model.diffusion_model)
         # print("compare before")
         # for index, (attn1, attn2) in enumerate(zip(temp, attn)):
@@ -660,43 +663,43 @@ class LatentDiffusion(DDPM):
             print(f"setting self.scale_factor to {self.scale_factor}")
             print("### USING STD-RESCALING ###")
             
-    def on_train_batch_end(self, *args, **kwargs):
-        # self.cmp_model(input_attn, self.model.diffusion_model.input_blocks[1][1], "input attn")
-        # self.cmp_model(output_attn, self.model.diffusion_model.output_blocks[3][1], "output attn")
-        temp = self.getModelAttnParam(self.model.diffusion_model)
-        for index, (attn1, attn2) in enumerate(zip(temp, attn)):
-            self.cmp_model(attn1, attn2, "attn " + str(index))
-        # self.cmp_model(old_cond_stage_model, self.cond_stage_model, "cond_stage_model")
-        # self.cmp_model(old_control_model, self.control_model, "control_model")
-        # self.cmp_model(old_style_encoder, self.style_encoder, "style_encoder")
-    #     #print("end")
+    # def on_train_batch_end(self, *args, **kwargs):
+    #     # self.cmp_model(input_attn, self.model.diffusion_model.input_blocks[1][1], "input attn")
+    #     # self.cmp_model(output_attn, self.model.diffusion_model.output_blocks[3][1], "output attn")
+    #     temp = self.getModelAttnParam(self.model.diffusion_model)
+    #     for index, (attn1, attn2) in enumerate(zip(temp, attn)):
+    #         self.cmp_model(attn1, attn2, "attn " + str(index))
+    #     # self.cmp_model(old_cond_stage_model, self.cond_stage_model, "cond_stage_model")
+    #     # self.cmp_model(old_control_model, self.control_model, "control_model")
+    #     # self.cmp_model(old_style_encoder, self.style_encoder, "style_encoder")
+    # #     #print("end")
 
-    def extractAttn(self, model):
-        spatial_transformer_params = []
-        # 遍历模型的所有子模块，并检查它们是否为 SpatialTransformer 的实例
-        for name, module in model.named_modules():
-            if isinstance(module, SpatialTransformer):
-                # 如果是 SpatialTransformer 实例，则将其参数添加到列表中
-                spatial_transformer_params.append(copy.deepcopy(module))
-        return spatial_transformer_params
+    # def extractAttn(self, model):
+    #     spatial_transformer_params = []
+    #     # 遍历模型的所有子模块，并检查它们是否为 SpatialTransformer 的实例
+    #     for name, module in model.named_modules():
+    #         if isinstance(module, SpatialTransformer):
+    #             # 如果是 SpatialTransformer 实例，则将其参数添加到列表中
+    #             spatial_transformer_params.append(copy.deepcopy(module))
+    #     return spatial_transformer_params
     
-    def getModelAttnParam(self, model):
-        spatial_transformer_params = []
-        # 遍历模型的所有子模块，并检查它们是否为 SpatialTransformer 的实例
-        for name, module in model.named_modules():
-            if isinstance(module, SpatialTransformer):
-                # 如果是 SpatialTransformer 实例，则将其参数添加到列表中
-                spatial_transformer_params.append(module)
-        return spatial_transformer_params
+    # def getModelAttnParam(self, model):
+    #     spatial_transformer_params = []
+    #     # 遍历模型的所有子模块，并检查它们是否为 SpatialTransformer 的实例
+    #     for name, module in model.named_modules():
+    #         if isinstance(module, SpatialTransformer):
+    #             # 如果是 SpatialTransformer 实例，则将其参数添加到列表中
+    #             spatial_transformer_params.append(module)
+    #     return spatial_transformer_params
         
         
-    def cmp_model(self, model1, model2, model_name ) :
-        param1 = model1.named_parameters()
-        param2 = model2.named_parameters()
-        for p1, p2 in zip( param1, param2 ) :
-            if not torch.equal( p1[1], p2[1] ) :
-                print( model_name + ' change' )
-                break
+    # def cmp_model(self, model1, model2, model_name ) :
+    #     param1 = model1.named_parameters()
+    #     param2 = model2.named_parameters()
+    #     for p1, p2 in zip( param1, param2 ) :
+    #         if not torch.equal( p1[1], p2[1] ) :
+    #             print( model_name + ' change' )
+    #             break
         # tempList = []
         # tempList2 = []
         
@@ -1049,6 +1052,9 @@ class LatentDiffusion(DDPM):
         #     self.step_curve.append(self.global_step)
         #     self.losses_curve.append(loss.data.cpu().numpy())
         #     self.draw_loss_curve(self.losses_curve,self.step_curve)
+        global step_count
+        self.record_loss_txt(loss, step_count)
+        step_count += 1
         
         if self.global_step % 3500 == 0: ##1000/4 accmulate gradient
             if len(self.losses_curve) == 0:
@@ -1076,10 +1082,25 @@ class LatentDiffusion(DDPM):
         plt.plot(step, losses_curve,c='b',label = 'loss')        # epoch_losses 传入模型训练中的 loss[]列表,在训练过程中，先创建loss列表，将每一个epoch的loss 加进这个列表
         plt.ylabel('loss')
         plt.xlabel('global_step')
+        plt.ylim(0, 0.1)
         plt.legend()    
-        index = 2
-        filename = "idea4_all_attnFliter_Classifier_attnOnly" + str(index) + ".jpg"
+        index = 1
+        filename = "idea4_all_attnFliter_Classifier_attnOnly_new" + str(index) + ".jpg"
         plt.savefig(os.path.join('lossCurve', filename))
+    
+    def record_loss_txt(self, loss, step, file_path='classifree_attnOnly_training_log.csv'):
+        # Check if the CSV file already exists. If not, write the header
+        try:
+            with open(file_path, 'x', newline='') as csvfile:
+                writer = csv.writer(csvfile)
+                writer.writerow(['Step', 'Loss'])  # Write the header
+        except FileExistsError:
+            pass  # If the file exists, we don't need to write the header
+
+        # Write the training step and loss to the CSV file
+        with open(file_path, 'a', newline='') as csvfile:
+            writer = csv.writer(csvfile)
+            writer.writerow([step, loss.item()])  # Write the data
     
 
     def p_mean_variance(self, x, c, t, clip_denoised: bool, return_codebook_ids=False, quantize_denoised=False,
