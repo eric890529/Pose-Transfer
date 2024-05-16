@@ -162,7 +162,7 @@ def visualize_grid_to_grid(att_map, grid_index, target, source, filepath, index,
     H,W = att_map.shape
     with_cls_token = False
       
-    grid_target = highlight_grid(target, [grid_index], grid_size)
+    grid_target = highlight_grid(target, [grid_index], grid_size, False)
     grid_source = highlight_grid(source, [grid_index], grid_size, False)
     
     mask = att_map[grid_index].reshape(grid_size[0], grid_size[1])
@@ -604,7 +604,7 @@ for ckpt in ckpt_list:
         attn_layer = 46 - 1
         index = 0
         for i in range(8):
-            visualize_head(attn_map[attn_layer][0,i], i)
+            # visualize_head(attn_map[attn_layer][0,i], i)
             visualize_grid_to_grid(attn_map[attn_layer][0,i,:,:], grid, target, source, filePath, index)
             index += 1
 
