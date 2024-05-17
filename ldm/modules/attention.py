@@ -160,7 +160,7 @@ class SpatialSelfAttention(nn.Module):
 #             nn.Linear(inner_dim, query_dim),
 #             nn.Dropout(dropout)
 #         )
-
+#     @get_local('sim')
 #     def forward(self, x, context=None, mask=None):
 #         h = self.heads
 
@@ -197,6 +197,7 @@ class SpatialSelfAttention(nn.Module):
 #         out = einsum('b i j, b j d -> b i d', sim, v)
 #         out = rearrange(out, '(b h) n d -> b n (h d)', h=h)
 #         return self.to_out(out)
+    
 class CrossAttention(nn.Module):
     def __init__(self, query_dim, context_dim=None, heads=8, dim_head=64, dropout=0.,num_filters=64):
         super().__init__()

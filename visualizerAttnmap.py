@@ -461,7 +461,7 @@ def p_sample_ddim(x, c, t, index, repeat_noise=False, use_original_steps=False, 
 
 get_local.activate() 
 
-debugpy.listen(("0.0.0.0", 7979))
+debugpy.listen(("0.0.0.0", 7777))
 print("Waiting for client to attach...")
 debugpy.wait_for_client()
 
@@ -482,7 +482,7 @@ DataConf.data.val.batch_size = batch_size
 
 val_dataset, train_dataset = deepfashion_data.get_train_val_dataloader(DataConf.data, labels_required = True, distributed = False)
 
-ckpt_list = ["new_exp_sd21_epoch=200_step=744000.ckpt"]
+ckpt_list = ["temp_new_exp_sd21_epoch=200_step=744000.ckpt"]
 dir = 'checkpoint_for_idea4_all_attnFliter_only_Attn/'
 path = "/workspace/ControlNet_idea1_2/" + dir
 
@@ -490,7 +490,7 @@ path = "/workspace/ControlNet_idea1_2/" + dir
 # print("Files and directories in '", path, "' :")
 # # prints all files
 # print(dir_list)
-gpu = 0
+gpu = 1
 import os 
 os.environ['CUDA_VISIBLE_DEVICES'] = str(gpu)
 torch.cuda.set_device(gpu)
@@ -558,7 +558,7 @@ for ckpt in ckpt_list:
             for result in results:
                 path = './inferenceValDataset_idea4_all_attnFliter_only_Attn_' + epoch 
                 path = path + '/' + x["path"][index]
-                Image.fromarray(result).save(path)
+                # Image.fromarray(result).save(path)
                 index += 1
 
         cache = get_local.cache
@@ -568,7 +568,7 @@ for ckpt in ckpt_list:
         source += '.png'
         target = target.split('_vis')[0] +'.png'
         datasetDir = '/workspace/dataset/dataset/deepfashion/real_testDataset/test_256x256/'
-        filePath = './AttnMapImage/grid/model_' + str(modelId) + '/'
+        filePath = './AttnMapImage/attnFilter_test/model_' + str(modelId) + '/'
 
         if not os.path.exists(filePath):
             os.makedirs(filePath)
@@ -580,6 +580,9 @@ for ckpt in ckpt_list:
 
         source = source.resize(resize)
         target = target.resize(resize)
+
+        target.save(filePath + "/target.png")
+        source.save(filePath + "/source.png")
         
         
         attn_map = attn_map_cache[-46:]
@@ -599,7 +602,7 @@ for ckpt in ckpt_list:
 
         attn_map = [np.expand_dims(item, axis=0) for item in attn_map]
         # attn_map = attn_map.unsqueeze(0)
-        grid = 340+32+32-3
+        grid = 60 #340+32+32-3
         iterate = 50
         attn_layer = 46 - 1
         index = 0
