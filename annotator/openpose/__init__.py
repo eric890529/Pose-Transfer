@@ -36,7 +36,7 @@ class OpenposeDetector:
         with torch.no_grad():
             candidate, subset = self.body_estimation(oriImg)
             canvas = np.zeros_like(oriImg)
-            canvas = util.draw_bodypose(canvas, candidate, subset)
+            canvas, joints = util.draw_bodypose(canvas, candidate, subset)
             if hand:
                 hands_list = util.handDetect(candidate, subset, oriImg)
                 all_hand_peaks = []
@@ -46,4 +46,4 @@ class OpenposeDetector:
                     peaks[:, 1] = np.where(peaks[:, 1] == 0, peaks[:, 1], peaks[:, 1] + y)
                     all_hand_peaks.append(peaks)
                 canvas = util.draw_handpose(canvas, all_hand_peaks)
-            return canvas, dict(candidate=candidate.tolist(), subset=subset.tolist())
+            return canvas, dict(candidate=candidate.tolist(), subset=subset.tolist()), joints

@@ -22,9 +22,9 @@ from PIL import Image
 # from attnVisualizer.visualizer import get_local
 # get_local.activate() 
 
-# debugpy.listen(("0.0.0.0", 7777))
-# print("Waiting for client to attach...")
-# debugpy.wait_for_client()
+debugpy.listen(("0.0.0.0", 7777))
+print("Waiting for client to attach...")
+debugpy.wait_for_client()
 
 
 parser = argparse.ArgumentParser(description='help')
@@ -43,7 +43,7 @@ DataConf.data.val.batch_size = batch_size
 
 val_dataset, train_dataset = deepfashion_data.get_train_val_dataloader(DataConf.data, labels_required = True, distributed = False)
 
-ckpt_list = ["new_exp_sd21_epoch=200_step=744000.ckpt"]
+ckpt_list = ["temp_new_exp_sd21_epoch=200_step=744000.ckpt"]
 dir = 'checkpoint_for_idea4_all_attnFliter_only_Attn/'
 path = "/workspace/ControlNet_idea1_2/" + dir
 
@@ -51,7 +51,7 @@ path = "/workspace/ControlNet_idea1_2/" + dir
 # print("Files and directories in '", path, "' :")
 # # prints all files
 # print(dir_list)
-gpu = 0
+gpu = 1
 import os 
 os.environ['CUDA_VISIBLE_DEVICES'] = str(gpu)
 torch.cuda.set_device(gpu)

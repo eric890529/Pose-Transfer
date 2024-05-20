@@ -389,7 +389,7 @@ class ControlLDM(LatentDiffusion):
             style_img = control
             ## 這裡做pose跟圖片concat?? pose也要經過encoder? 還是concat完再進入encoder?
             pose = batch['target_skeleton']
-        control = torch.cat([control,pose] , dim=1)
+        # control = torch.cat([control,pose] , dim=1)
         
         
         if bs is not None:
@@ -397,7 +397,7 @@ class ControlLDM(LatentDiffusion):
         control = control.to(self.device)
         #control = einops.rearrange(control, 'b h w c -> b c h w')
         control = control.to(memory_format=torch.contiguous_format).float()
-        return x, dict(c_crossattn=[c], c_concat=[control], c_style = [style_img])
+        return x, dict(c_crossattn=[c], c_concat=[pose], c_style = [style_img])
         #return x, dict(c_concat=[control])
 
     def apply_model(self, x_noisy, t, cond, *args, **kwargs):
@@ -430,8 +430,8 @@ class ControlLDM(LatentDiffusion):
         cond_style = self.style_encoder(z_style)
         
         # Get CLIP embeddings
-        controlInput = torch.cat(cond['c_concat'], 1)
-        controlStyle, controlPose = torch.split(controlInput, [3,20], dim = 1) #可以check是否跟c_style一樣
+        controlPose = torch.cat(cond['c_concat'], 1)
+        # controlStyle, controlPose = torch.split(controlInput, [3,20], dim = 1) #可以check是否跟c_style一樣
         # inputs = {"pixel_values": torch_resize(controlStyle).to(self.device)}
         # clip_hidden_states =  self.clip_encoder(**inputs).last_hidden_state.to(self.device)
         

@@ -116,7 +116,8 @@ class DDIMSampler(object):
                                                     unconditional_guidance_scale=unconditional_guidance_scale,
                                                     unconditional_conditioning=unconditional_conditioning,
                                                     dynamic_threshold=dynamic_threshold,
-                                                    ucg_schedule=ucg_schedule
+                                                    ucg_schedule=ucg_schedule,
+                                                    **kwargs
                                                     )
         return samples, intermediates
 
@@ -127,7 +128,7 @@ class DDIMSampler(object):
                       mask=None, x0=None, img_callback=None, log_every_t=100,
                       temperature=1., noise_dropout=0., score_corrector=None, corrector_kwargs=None,
                       unconditional_guidance_scale=1., unconditional_conditioning=None, dynamic_threshold=None,
-                      ucg_schedule=None):
+                      ucg_schedule=None, ref_mask = None, ref = None, **kwargs):
         device = self.model.betas.device
         b = shape[0]
         if x_T is None:
@@ -167,8 +168,12 @@ class DDIMSampler(object):
                                       corrector_kwargs=corrector_kwargs,
                                       unconditional_guidance_scale=unconditional_guidance_scale,
                                       unconditional_conditioning=unconditional_conditioning,
-                                      dynamic_threshold=dynamic_threshold)
+                                      dynamic_threshold=dynamic_threshold, **kwargs)
+            
             img, pred_x0 = outs
+            if ref_mask is not None:
+                img = img*ref_mask + self.model.q_sample(ref, ts)*(1-ref_mask)
+                
             if callback: callback(i)
             if img_callback: img_callback(pred_x0, i)
 
