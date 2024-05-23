@@ -606,7 +606,7 @@ for ckpt in ckpt_list:
         iterate = 50
         attn_layer = 46 - 1
         index = 0
-        for i in range(8):
+        for i in range(8): # head
             # visualize_head(attn_map[attn_layer][0,i], i)
             visualize_grid_to_grid(attn_map[attn_layer][0,i,:,:], grid, target, source, filePath, index)
             index += 1

@@ -17,9 +17,9 @@ from ldm.modules.diffusionmodules.util import (
     timestep_embedding,
 )
 
-# debugpy.listen(("0.0.0.0", 7777))
-# print("Waiting for client to attach...")
-# debugpy.wait_for_client()
+debugpy.listen(("0.0.0.0", 7979))
+print("Waiting for client to attach...")
+debugpy.wait_for_client()
 
 
 import argparse

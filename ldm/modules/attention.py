@@ -236,7 +236,7 @@ class CrossAttention(nn.Module):
        
         return hidden_states
     
-    @get_local('attention_probs')
+    # @get_local('attention_probs')
     def forward(self, x, context=None, mask=None):
         h = self.heads
         q = self.to_q(x)
@@ -261,16 +261,17 @@ class CrossAttention(nn.Module):
 
         extraction_filters, distribution_filters = map(lambda t: rearrange(t, 'b n (h d) -> (b h) n d', h=h), (extraction_filters, distribution_filters))
 
-        spatial_attention_probs = self.getAttnScore(extraction_filters, k)
+        spatial_attention_probs = self.getAttnScore(extraction_filters, k) # b n c * b c hw = b n hw
         spatial_attention_probs = spatial_attention_probs.softmax(-1)
 
-        channel_attention_probs = self.getAttnScore(distribution_filters, q)
+        channel_attention_probs = self.getAttnScore(distribution_filters, q) # b n c * b c hw = b n hw
         channel_attention_probs = channel_attention_probs.softmax(1)
 
         # attention_probs = self.getAttnScore(spatial_attention_probs, channel_attention_probs)
         attention_probs = torch.bmm(
-            channel_attention_probs.transpose(-1, -2), spatial_attention_probs
+            channel_attention_probs.transpose(-1, -2), spatial_attention_probs # b hw n * b n hw = b hw hw
         )
+
         # # force cast to fp32 to avoid overflowing
         # if _ATTN_PRECISION =="fp32":
         #     with torch.autocast(enabled=False, device_type = 'cuda'):
