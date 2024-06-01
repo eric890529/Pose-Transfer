@@ -31,6 +31,7 @@ parser = argparse.ArgumentParser(description='help')
 parser.add_argument('--dataset_path', type=str, default='/workspace/dataset/dataset/deepfashion')
 parser.add_argument('--DataConfigPath', type=str, default='./dataConfig/data.yaml')
 parser.add_argument('--batch_size', type=int, default=32)
+parser.add_argument('--gpu', type=int, default=3)
 
 args = parser.parse_args()
 
@@ -46,7 +47,7 @@ val_dataset, train_dataset = deepfashion_data.get_train_val_dataloader(DataConf.
 ckpt_list = ["new_exp_sd21_epoch=160_step=594000.ckpt"]
 
 
-dir = "checkpoint_for_idea4_all_attnFliter_Classifier_attnOnly_new/"
+dir = "checkpoint_for_idea4_all_attnFliter_Classifier_attnOnly_new_lowerProb/"
 path = "/workspace/ControlNet_idea1_2/" + dir
 
 # dir_list = os.listdir(path)
@@ -54,10 +55,10 @@ path = "/workspace/ControlNet_idea1_2/" + dir
 # prints all files
 # print(dir_list)
 
-
+gpu = args.gpu
 import os 
-os.environ['CUDA_VISIBLE_DEVICES'] = "1"
-torch.cuda.set_device(1)
+os.environ['CUDA_VISIBLE_DEVICES'] = str(gpu)
+torch.cuda.set_device(gpu)
 for ckpt in ckpt_list:
     print("-------------------inference "+ dir + ckpt + "------------------------")
     eIdx = ckpt.find("epoch")
@@ -66,7 +67,7 @@ for ckpt in ckpt_list:
 
     model = create_model('./models/idea4.yaml').cpu()
     model.load_state_dict(load_state_dict('./' + dir + ckpt, location='cpu'))
-    model = model.cuda(1)
+    model = model.cuda(gpu)
     model.eval()
     ddim_sampler = DDIMSampler(model)
 
@@ -110,12 +111,12 @@ for ckpt in ckpt_list:
             x_samples = (einops.rearrange(x_samples, 'b c h w -> b h w c') * 127.5 + 127.5).cpu().numpy().clip(0, 255).astype(np.uint8)
 
             results = [x_samples[i] for i in range(batch_size)]
-            path = './inferenceValDataset_idea4_all_attnFliter_Classifier_new_r3p2_' + epoch 
+            path = './inferenceValDataset_idea4_all_attnFliter_Classifier__new_lowerProb_r3p2_' + epoch 
             if not os.path.exists(path):
                 os.makedirs(path)
             index = 0
             for result in results:
-                path = './inferenceValDataset_idea4_all_attnFliter_Classifier_new_r3p2_' + epoch 
+                path = './inferenceValDataset_idea4_all_attnFliter_Classifier__new_lowerProb_r3p2_' + epoch 
                 path = path + '/' + x["path"][index]
                 Image.fromarray(result).save(path)
                 index += 1

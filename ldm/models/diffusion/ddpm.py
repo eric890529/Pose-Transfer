@@ -455,7 +455,7 @@ class DDPM(pl.LightningModule):
                     batch[k][i] = val
         
 
-        cfg_value = 0.15
+        cfg_value = 0.08
         # batch["ref_values"] = None
         rand = torch.rand(1).cuda()
         if rand < cfg_value:
@@ -1084,11 +1084,11 @@ class LatentDiffusion(DDPM):
         plt.xlabel('global_step')
         plt.ylim(0, 0.1)
         plt.legend()    
-        index = 1
-        filename = "idea4_all_attnFliter_Classifier_attnOnly_new" + str(index) + ".jpg"
+        index = 2
+        filename = "idea4_all_attnFliter_Classifier_attnOnly_new_lowerProb" + str(index) + ".jpg"
         plt.savefig(os.path.join('lossCurve', filename))
     
-    def record_loss_txt(self, loss, step, file_path='classifree_attnOnly_training_log.csv'):
+    def record_loss_txt(self, loss, step, file_path='classifree_attnOnly_lowerProb_training_log.csv'):
         # Check if the CSV file already exists. If not, write the header
         try:
             with open(file_path, 'x', newline='') as csvfile:
