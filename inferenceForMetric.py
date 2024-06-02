@@ -44,7 +44,7 @@ DataConf.data.val.batch_size = batch_size
 
 val_dataset, train_dataset = deepfashion_data.get_train_val_dataloader(DataConf.data, labels_required = True, distributed = False)
 
-ckpt_list = ["new_exp_sd21_epoch=160_step=594000.ckpt"]
+ckpt_list = ["new_exp_sd21_epoch=200_step=744000.ckpt"]
 
 
 dir = "checkpoint_for_idea4_all_attnFliter_Classifier_attnOnly_new_lowerProb/"
