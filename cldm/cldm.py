@@ -441,7 +441,7 @@ class ControlLDM(LatentDiffusion):
             b, c, h, w = x_noisy.shape
             temp = torch.zeros(b, 4, h, w)
             cond_style = []
-            for i in range(12):
+            for i in range(12): #多尺度特徵擷取器的層數
                 cond_style.append(temp)
         
         # Get CLIP embeddings

@@ -187,8 +187,8 @@ class DDIMSampler(object):
         if unconditional_conditioning is None or unconditional_guidance_scale == 1.:
             model_output = self.model.apply_model(x, t, c)
         else:
-            x_in = torch.cat([x] * 3)
-            t_in = torch.cat([t] * 3)
+            x_in = torch.cat([x] * 4)
+            t_in = torch.cat([t] * 4)
             if isinstance(c, dict):
                 assert isinstance(unconditional_conditioning, dict)
                 c_in = dict()
@@ -209,37 +209,51 @@ class DDIMSampler(object):
             else:
                 c_in = torch.cat([unconditional_conditioning, c])
 
-            x_un, x_pose, x_cond = x_in.chunk(3)
-            t_un, t_pose, t_cond = t_in.chunk(3)
+            x_un, x_pose, x_style, x_cond = x_in.chunk(4)
+            t_un, t_pose, t_style, t_cond = t_in.chunk(4)
             c_cond = {}
             c_pose = {}
+            c_style = {}
             c_un = {}
             for c in c_in:
                 c_un[c], c_cond[c] = c_in[c][0].chunk(2)
+
                 c_pose[c] = c_cond[c].clone()
+                c_style[c] = c_cond[c].clone()
+
                 c_pose[c] = [c_pose[c]]
+                c_style[c] = [c_style[c]]
+
                 c_cond[c] = [c_cond[c]]
                 c_un[c] = [c_un[c]]
             
             
-            c_pose['c_style'][0] = torch.zeros_like(c_pose['c_style'][0])  # no style
+            c_pose['c_style'][0] = torch.zeros_like(c_pose['c_style'][0])  # pose, but no style
+            c_style['c_concat'][0] = torch.zeros_like(c_style['c_concat'][0]) * 0 # style, but no pose
 
-            ref_scale = 3
-            pose_scale = 2
-            model_t = self.model.apply_model(x_cond, t_cond, c_cond) #with all cond
-            model_pose = self.model.apply_model(x_pose, t_pose, c_pose) #with pose no style
-            model_uncond = self.model.apply_model(x_un, t_un, c_un) #no cond
-            # model_uncond, model_t = self.model.apply_model(x_in, t_in, c_in).chunk(2)
-            # model_output = model_uncond + unconditional_guidance_scale * (model_t - model_uncond)
-            model_output = model_uncond + ref_scale * (model_t - model_pose) + pose_scale * (model_pose - model_uncond)
-
-
-            # PIDM
+            ref_scale = 5
+            pose_scale = 4
             # model_t = self.model.apply_model(x_cond, t_cond, c_cond) #with all cond
             # model_pose = self.model.apply_model(x_pose, t_pose, c_pose) #with pose no style
-            # model_pose = self.model.apply_model(x_style, t_style, c_style) #with style no pose
             # model_uncond = self.model.apply_model(x_un, t_un, c_un) #no cond
+            # # model_uncond, model_t = self.model.apply_model(x_in, t_in, c_in).chunk(2)
+            # # model_output = model_uncond + unconditional_guidance_scale * (model_t - model_uncond)
             # model_output = model_uncond + ref_scale * (model_t - model_pose) + pose_scale * (model_pose - model_uncond)
+
+
+            #PIDM # not working
+            # model_t = self.model.apply_model(x_cond, t_cond, c_cond) #with all cond
+            # model_pose = self.model.apply_model(x_pose, t_pose, c_pose) #with pose no style
+            # model_style = self.model.apply_model(x_style, t_style, c_style) #with style no pose
+            # model_uncond = self.model.apply_model(x_un, t_un, c_un) #no cond
+            # model_output = model_uncond + ref_scale * (model_style - model_uncond) + pose_scale * (model_pose - model_uncond)
+
+            #true PIDM # not working
+            model_t = self.model.apply_model(x_cond, t_cond, c_cond) #with all cond
+            # model_pose = self.model.apply_model(x_pose, t_pose, c_pose) #with pose no style
+            # model_style = self.model.apply_model(x_style, t_style, c_style) #with style no pose
+            model_uncond = self.model.apply_model(x_un, t_un, c_un) #no cond
+            model_output = model_uncond + 4 * (model_t - model_uncond) 
 
         if self.model.parameterization == "v":
             e_t = self.model.predict_eps_from_z_and_v(x, t, model_output)

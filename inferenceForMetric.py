@@ -22,9 +22,9 @@ import torchvision
 from PIL import Image
 
 
-# debugpy.listen(("0.0.0.0", 7979))
-# print("Waiting for client to attach...")
-# debugpy.wait_for_client()
+debugpy.listen(("0.0.0.0", 7979))
+print("Waiting for client to attach...")
+debugpy.wait_for_client()
 
 
 parser = argparse.ArgumentParser(description='help')
@@ -47,7 +47,7 @@ val_dataset, train_dataset = deepfashion_data.get_train_val_dataloader(DataConf.
 ckpt_list = ["new_exp_sd21_epoch=200_step=744000.ckpt"]
 
 
-dir = "checkpoint_for_idea4_all_attnFliter_Classifier_attnOnly_new_lowerProb/"
+dir = "checkpoint_for_idea4_all_attnFliter_Classifier_attnOnly_new_lowerProb_8/"
 path = "/workspace/ControlNet_idea1_2/" + dir
 
 # dir_list = os.listdir(path)
@@ -111,12 +111,12 @@ for ckpt in ckpt_list:
             x_samples = (einops.rearrange(x_samples, 'b c h w -> b h w c') * 127.5 + 127.5).cpu().numpy().clip(0, 255).astype(np.uint8)
 
             results = [x_samples[i] for i in range(batch_size)]
-            path = './inferenceValDataset_idea4_all_attnFliter_Classifier__new_lowerProb_r3p2_' + epoch 
+            path = './inferenceValDataset_idea4_all_attnFliter_Classifier__new_lowerProb_r3p2_PIDM_' + epoch 
             if not os.path.exists(path):
                 os.makedirs(path)
             index = 0
             for result in results:
-                path = './inferenceValDataset_idea4_all_attnFliter_Classifier__new_lowerProb_r3p2_' + epoch 
+                path = './inferenceValDataset_idea4_all_attnFliter_Classifier__new_lowerProb_r3p2_PIDM_' + epoch 
                 path = path + '/' + x["path"][index]
                 Image.fromarray(result).save(path)
                 index += 1
