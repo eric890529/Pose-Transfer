@@ -248,7 +248,7 @@ class DDIMSampler(object):
             # model_uncond = self.model.apply_model(x_un, t_un, c_un) #no cond
             # model_output = model_uncond + ref_scale * (model_style - model_uncond) + pose_scale * (model_pose - model_uncond)
 
-            #true PIDM # not working
+            #true PIDM 
             model_t = self.model.apply_model(x_cond, t_cond, c_cond) #with all cond
             # model_pose = self.model.apply_model(x_pose, t_pose, c_pose) #with pose no style
             # model_style = self.model.apply_model(x_style, t_style, c_style) #with style no pose
