@@ -455,7 +455,7 @@ class DDPM(pl.LightningModule):
                     batch[k][i] = val
         
 
-        cfg_value = 0.08
+        cfg_value = 0.04 #0.12 0.15 0.08
         # batch["ref_values"] = None
         rand = torch.rand(1).cuda()
         if rand < cfg_value:
@@ -1085,7 +1085,7 @@ class LatentDiffusion(DDPM):
         plt.ylim(0, 0.1)
         plt.legend()    
         index = 2
-        filename = "idea4_all_attnFliter_Classifier_attnOnly_new_lowerProb" + str(index) + ".jpg"
+        filename = "idea4_all_attnFliter_Classifier_attnOnly_new_lowerProb_4" + str(index) + ".jpg"
         plt.savefig(os.path.join('lossCurve', filename))
     
     def record_loss_txt(self, loss, step, file_path='classifree_attnOnly_lowerProb_training_log.csv'):

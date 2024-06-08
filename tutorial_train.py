@@ -39,8 +39,8 @@ DataConf.data.train.batch_size = args.batch_size//2  #src -> tgt , tgt -> src
 val_dataset, train_dataset = deepfashion_data.get_train_val_dataloader(DataConf.data, labels_required = True, distributed = False)
 
 # Configs
-# resume_path = './models/idea4_attnFliter.ckpt'
-resume_path = './checkpoint_for_idea4_all_attnFliter_Classifier_attnOnly_new_lowerProb/new_exp_sd21_epoch=22_step=084000.ckpt'
+resume_path = './models/idea4_attnFliter.ckpt'
+# resume_path = './checkpoint_for_idea4_all_attnFliter_Classifier_attnOnly_new_lowerProb/new_exp_sd21_epoch=22_step=084000.ckpt'
 #batch_size = 2
 logger_freq = 4000
 learning_rate = 1e-5
@@ -87,14 +87,14 @@ model.only_mid_control = only_mid_control
 from pytorch_lightning.callbacks import ModelCheckpoint
 
 import os
-directory = "checkpoint_for_idea4_all_attnFliter_Classifier_attnOnly_new_lowerProb"
+directory = "checkpoint_for_idea4_all_attnFliter_Classifier_attnOnly_new_lowerProb_4"
 if not os.path.exists(directory):
     os.makedirs(directory)
 acc_size = 2
 
 checkpoint_callback = ModelCheckpoint(dirpath = directory,
                                       save_top_k = -1,
-                                      every_n_train_steps=6000, save_last=True, #4000/1000
+                                      every_n_train_steps=8000, save_last=True, #4000/1000
                                       save_weights_only=False,
                                       filename='new_exp_sd21_{epoch:02d}_{step:06d}')
 
@@ -103,7 +103,7 @@ checkpoint_callback = ModelCheckpoint(dirpath = directory,
 # dataloader = DataLoader(dataset, num_workers=0, batch_size=batch_size, shuffle=True)
 logger = ImageLogger(batch_frequency=logger_freq)
 trainer = pl.Trainer(accelerator="gpu", devices=[gpu], precision=32, callbacks=[logger, checkpoint_callback],
-                     accumulate_grad_batches=acc_size, resume_from_checkpoint = resume_path) # , resume_from_checkpoint = './checkpoint/last.ckpt' , resume_from_checkpoint = './checkpoint_for_diffusion/last.ckpt'
+                     accumulate_grad_batches=acc_size) # , resume_from_checkpoint = './checkpoint/last.ckpt' , resume_from_checkpoint = './checkpoint_for_diffusion/last.ckpt'
 #, resume_from_checkpoint = resume_path
 # Train!
 trainer.fit(model, train_dataset)

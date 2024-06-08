@@ -233,6 +233,14 @@ class DDIMSampler(object):
             # model_output = model_uncond + unconditional_guidance_scale * (model_t - model_uncond)
             model_output = model_uncond + ref_scale * (model_t - model_pose) + pose_scale * (model_pose - model_uncond)
 
+
+            # PIDM
+            # model_t = self.model.apply_model(x_cond, t_cond, c_cond) #with all cond
+            # model_pose = self.model.apply_model(x_pose, t_pose, c_pose) #with pose no style
+            # model_pose = self.model.apply_model(x_style, t_style, c_style) #with style no pose
+            # model_uncond = self.model.apply_model(x_un, t_un, c_un) #no cond
+            # model_output = model_uncond + ref_scale * (model_t - model_pose) + pose_scale * (model_pose - model_uncond)
+
         if self.model.parameterization == "v":
             e_t = self.model.predict_eps_from_z_and_v(x, t, model_output)
         else:
