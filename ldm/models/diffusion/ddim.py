@@ -231,14 +231,25 @@ class DDIMSampler(object):
             c_pose['c_style'][0] = torch.zeros_like(c_pose['c_style'][0])  # pose, but no style
             c_style['c_concat'][0] = torch.zeros_like(c_style['c_concat'][0]) * 0 # style, but no pose
 
-            ref_scale = 5
-            pose_scale = 4
+            ref_scale = 3
+            pose_scale = 2
+            model_t = self.model.apply_model(x_cond, t_cond, c_cond) #with all cond
+            model_pose = self.model.apply_model(x_pose, t_pose, c_pose) #with pose no style
+            model_uncond = self.model.apply_model(x_un, t_un, c_un) #no cond
+            # model_uncond, model_t = self.model.apply_model(x_in, t_in, c_in).chunk(2)
+            # model_output = model_uncond + unconditional_guidance_scale * (model_t - model_uncond)
+            model_output = model_uncond + ref_scale * (model_t - model_pose) + pose_scale * (model_pose - model_uncond) #以動作為主 看要多接近ref 因此可以控制不要ref 隨機生成人 但效果不佳
+
+            # # try 
+            # pose_scale = 5
+            # ref_scale = 5
             # model_t = self.model.apply_model(x_cond, t_cond, c_cond) #with all cond
-            # model_pose = self.model.apply_model(x_pose, t_pose, c_pose) #with pose no style
+            # model_style = self.model.apply_model(x_style, t_style, c_style) #with style no pose
+            # # model_pose = self.model.apply_model(x_pose, t_pose, c_pose)
             # model_uncond = self.model.apply_model(x_un, t_un, c_un) #no cond
             # # model_uncond, model_t = self.model.apply_model(x_in, t_in, c_in).chunk(2)
             # # model_output = model_uncond + unconditional_guidance_scale * (model_t - model_uncond)
-            # model_output = model_uncond + ref_scale * (model_t - model_pose) + pose_scale * (model_pose - model_uncond)
+            # model_output = model_uncond + pose_scale * (model_t - model_style) + ref_scale * (model_style - model_uncond) # 以人物為主 看要多接近pose 因此可以控制不要pose 隨機擺動作
 
 
             #PIDM # not working
@@ -249,11 +260,11 @@ class DDIMSampler(object):
             # model_output = model_uncond + ref_scale * (model_style - model_uncond) + pose_scale * (model_pose - model_uncond)
 
             #true PIDM 
-            model_t = self.model.apply_model(x_cond, t_cond, c_cond) #with all cond
-            # model_pose = self.model.apply_model(x_pose, t_pose, c_pose) #with pose no style
-            # model_style = self.model.apply_model(x_style, t_style, c_style) #with style no pose
-            model_uncond = self.model.apply_model(x_un, t_un, c_un) #no cond
-            model_output = model_uncond + 4 * (model_t - model_uncond) 
+            # model_t = self.model.apply_model(x_cond, t_cond, c_cond) #with all cond
+            # # model_pose = self.model.apply_model(x_pose, t_pose, c_pose) #with pose no style
+            # # model_style = self.model.apply_model(x_style, t_style, c_style) #with style no pose
+            # model_uncond = self.model.apply_model(x_un, t_un, c_un) #no cond
+            # model_output = model_uncond + 4 * (model_t - model_uncond) 
 
         if self.model.parameterization == "v":
             e_t = self.model.predict_eps_from_z_and_v(x, t, model_output)
