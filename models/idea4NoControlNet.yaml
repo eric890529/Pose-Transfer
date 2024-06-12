@@ -60,7 +60,7 @@ model:
       target: cldm.cldm.ControlledUnetModel
       params:
         image_size: 32 # unused
-        in_channels: 24 # 4 + 23
+        in_channels: 24 #4 # 4 + 23
         out_channels: 4
         model_channels: 320
         attention_resolutions: [ 4, 2, 1 ]

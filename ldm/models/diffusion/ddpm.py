@@ -603,6 +603,8 @@ class LatentDiffusion(DDPM):
         step_record = []
         global losses_curve_list
         losses_curve_list = []
+        global step
+        step = 0
         ##
 
     def make_cond_schedule(self, ):
@@ -1015,9 +1017,9 @@ class LatentDiffusion(DDPM):
         #     self.losses_curve.append(loss.data.cpu().numpy())
         #     self.draw_loss_curve(self.losses_curve,self.step_curve)
 
-    
-        self.record_loss_txt(loss, self.global_step)
-        
+        global step
+        self.record_loss_txt(loss, step)
+        step = step + 1
 
         # if self.global_step % 3084 == 0: ##1000/4 accmulate gradient
         #     if len(self.losses_curve) == 0:
@@ -1036,7 +1038,7 @@ class LatentDiffusion(DDPM):
 
         return loss, loss_dict
     
-    def record_loss_txt(self, loss, step, file_path='noctrl_training_log.csv'):
+    def record_loss_txt(self, loss, step, file_path='noctrl_training_updataeALL_log.csv'):
         # Check if the CSV file already exists. If not, write the header
         try:
             with open(file_path, 'x', newline='') as csvfile:
