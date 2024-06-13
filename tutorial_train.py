@@ -40,7 +40,7 @@ val_dataset, train_dataset = deepfashion_data.get_train_val_dataloader(DataConf.
 
 # Configs
 resume_path = './models/idea4NoControlNet.ckpt'
-# resume_path = './checkpoint_for_idea4_all_noControlNet/new_exp_sd21_epoch=169_step=522000.ckpt'
+resume_path = './checkpoint_for_idea4_all_noControlNet_allUpdate/new_exp_sd21_epoch=09_step=036000.ckpt'
 #batch_size = 2
 logger_freq = 3000
 learning_rate = 1e-5
@@ -102,12 +102,12 @@ checkpoint_callback = ModelCheckpoint(dirpath = directory,
 # dataloader = DataLoader(dataset, num_workers=0, batch_size=batch_size, shuffle=True)
 logger = ImageLogger(batch_frequency=logger_freq)
 trainer = pl.Trainer(accelerator="gpu", devices=[gpu], precision=32, callbacks=[logger, checkpoint_callback],
-                     accumulate_grad_batches=acc_size) # , resume_from_checkpoint = './checkpoint/last.ckpt' , resume_from_checkpoint = './checkpoint_for_diffusion/last.ckpt'
+                     accumulate_grad_batches=acc_size, resume_from_checkpoint = resume_path) # , resume_from_checkpoint = './checkpoint/last.ckpt' , resume_from_checkpoint = './checkpoint_for_diffusion/last.ckpt'
 #, resume_from_checkpoint = resume_path
 # Train!
 trainer.fit(model, train_dataset)
 
-# , resume_from_checkpoint = resume_path
+# ,  = resume_path
 # 存checkpoint地點
 # 改路徑logger
 # losscurve

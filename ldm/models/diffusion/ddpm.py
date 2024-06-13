@@ -1038,7 +1038,7 @@ class LatentDiffusion(DDPM):
 
         return loss, loss_dict
     
-    def record_loss_txt(self, loss, step, file_path='noctrl_training_updataeALL_log.csv'):
+    def record_loss_txt(self, loss, step, file_path='noctrl_training_updataeALL_log2.csv'):
         # Check if the CSV file already exists. If not, write the header
         try:
             with open(file_path, 'x', newline='') as csvfile:
