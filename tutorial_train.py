@@ -17,7 +17,7 @@ from ldm.modules.diffusionmodules.util import (
     timestep_embedding,
 )
 
-# debugpy.listen(("0.0.0.0", 7777))
+# debugpy.listen(("0.0.0.0", 7979))
 # print("Waiting for client to attach...")
 # debugpy.wait_for_client()
 
@@ -87,13 +87,13 @@ model.only_mid_control = only_mid_control
 from pytorch_lightning.callbacks import ModelCheckpoint
 
 import os
-directory = "checkpoint_for_idea4_all"
+directory = "checkpoint_for_idea4_all_firstLayer"
 if not os.path.exists(directory):
     os.makedirs(directory)
 acc_size = 2
 checkpoint_callback = ModelCheckpoint(dirpath = directory,
                                       save_top_k = -1,
-                                      every_n_train_steps=6000/acc_size, save_last=True, #4000/1000
+                                      every_n_train_steps=7000, save_last=True, #4000/1000
                                       save_weights_only=False,
                                       filename='new_exp_sd21_{epoch:02d}_{step:06d}')
 

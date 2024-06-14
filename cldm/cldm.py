@@ -44,14 +44,14 @@ class ControlledUnetModel(UNetModel):
         mid_cond_emb = cond_style[-1]
         dec_cond_emb = cond_style
         
-        with torch.no_grad():
-            t_emb = timestep_embedding(timesteps, self.model_channels, repeat_only=False)
-            emb = self.time_embed(t_emb)
-            h = x.type(self.dtype)
-            for i, module in enumerate(self.input_blocks):
-                h = module(h, emb, cond = enc_cond_emb[i])
-                hs.append(h)
-            h = self.middle_block(h, emb, cond = mid_cond_emb)
+        # with torch.no_grad():
+        t_emb = timestep_embedding(timesteps, self.model_channels, repeat_only=False)
+        emb = self.time_embed(t_emb)
+        h = x.type(self.dtype)
+        for i, module in enumerate(self.input_blocks):
+            h = module(h, emb, cond = enc_cond_emb[i])
+            hs.append(h)
+        h = self.middle_block(h, emb, cond = mid_cond_emb)
 
         if control is not None:
             h += control.pop()
@@ -568,13 +568,14 @@ class ControlLDM(LatentDiffusion):
 
     def configure_optimizers(self):
         lr = self.learning_rate
-        transform_param = self.extractAttnParam(self.model.diffusion_model.input_blocks)
-        params =  list(self.control_model.parameters() )+ list(self.style_encoder.parameters())  
+        # transform_param = self.extractAttnParam(self.model.diffusion_model.input_blocks)
+        # params =  list(self.control_model.parameters() )+ list(self.style_encoder.parameters())  
+        params =  list(self.style_encoder.parameters())  + list(self.model.diffusion_model.input_blocks[0].parameters()) + list(self.control_model.parameters())
               # #list(self.first_stage_model.parameters()) +  list(self.adapter.parameters())
-        for p in transform_param:
-            params += list(p)
+        # for p in transform_param:
+        #     params += list(p)
 
-        if not self.sd_locked:
+        if True:
             # params += list(self.model.parameters())
             params += list(self.model.diffusion_model.output_blocks.parameters())
             params += list(self.model.diffusion_model.out.parameters())
