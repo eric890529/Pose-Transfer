@@ -455,7 +455,7 @@ class DDPM(pl.LightningModule):
                     batch[k][i] = val
         
 
-        cfg_value = 0.04 #0.12 0.15 0.08
+        cfg_value = 0.12 #0.04 0.15 0.08
         # batch["ref_values"] = None
         rand = torch.rand(1).cuda()
         if rand < cfg_value:
