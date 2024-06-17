@@ -22,7 +22,7 @@ from PIL import Image
 # from attnVisualizer.visualizer import get_local
 # get_local.activate() 
 
-debugpy.listen(("0.0.0.0", 7777))
+debugpy.listen(("0.0.0.0", 7979))
 print("Waiting for client to attach...")
 debugpy.wait_for_client()
 
@@ -43,15 +43,15 @@ DataConf.data.val.batch_size = batch_size
 
 val_dataset, train_dataset = deepfashion_data.get_train_val_dataloader(DataConf.data, labels_required = True, distributed = False)
 
-ckpt_list = ["temp_new_exp_sd21_epoch=200_step=744000.ckpt"]
-dir = 'checkpoint_for_idea4_all_attnFliter_only_Attn/'
+ckpt_list = ["newCkpt1.ckpt"]
+dir = 'models/'
 path = "/workspace/ControlNet_idea1_2/" + dir
 
 # dir_list = os.listdir(path)
 # print("Files and directories in '", path, "' :")
 # # prints all files
 # print(dir_list)
-gpu = 1
+gpu = 0
 import os 
 os.environ['CUDA_VISIBLE_DEVICES'] = str(gpu)
 torch.cuda.set_device(gpu)
@@ -107,12 +107,12 @@ for ckpt in ckpt_list:
             x_samples = (einops.rearrange(x_samples, 'b c h w -> b h w c') * 127.5 + 127.5).cpu().numpy().clip(0, 255).astype(np.uint8)
 
             results = [x_samples[i] for i in range(batch_size)]
-            path = './inferenceValDataset_idea4_all_attnFliter_only_Attn_test' + epoch 
+            path = './inferenceValDataset_idea4_all_attnFliter_only_Attn_test_newVAE2' + epoch 
             if not os.path.exists(path):
                 os.makedirs(path)
             index = 0
             for result in results:
-                path = './inferenceValDataset_idea4_all_attnFliter_only_Attn_test' + epoch 
+                path = './inferenceValDataset_idea4_all_attnFliter_only_Attn_test_newVAE2' + epoch 
                 path = path + '/' + x["path"][index]
                 Image.fromarray(result).save(path)
                 index += 1

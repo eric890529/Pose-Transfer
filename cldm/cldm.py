@@ -430,7 +430,7 @@ class ControlLDM(LatentDiffusion):
         cond_style = self.style_encoder(z_style)
         
         # Get CLIP embeddings
-        controlPose = torch.cat(cond['c_concat'], 1)
+        controlPose = torch.cat(cond['c_concat'], 1).to("cuda")
         # controlStyle, controlPose = torch.split(controlInput, [3,20], dim = 1) #可以check是否跟c_style一樣
         # inputs = {"pixel_values": torch_resize(controlStyle).to(self.device)}
         # clip_hidden_states =  self.clip_encoder(**inputs).last_hidden_state.to(self.device)
