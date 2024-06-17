@@ -108,5 +108,5 @@ class ImageLogger(Callback):
         return check_idx % self.batch_freq == 0
 
     def on_train_batch_end(self, trainer, pl_module, outputs, batch, batch_idx):
-        if not self.disabled:
+        if False:
             self.log_img(pl_module, batch, batch_idx, split="train/idea1_2_for_idea4_all_firstLayer")
