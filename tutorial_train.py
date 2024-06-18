@@ -40,7 +40,7 @@ val_dataset, train_dataset = deepfashion_data.get_train_val_dataloader(DataConf.
 
 # Configs
 resume_path = './models/idea4_attnFliter.ckpt'
-resume_path = './checkpoint_for_idea4_all_attnFliter_Classifier_attnOnly_new_lowerProb_12/new_exp_sd21_epoch=75_step=280000.ckpt'
+resume_path = './checkpoint_for_idea4_all_attnFliter_Classifier_attnOnly_new_lowerProb_12/new_exp_sd21_epoch=138_step=512000.ckpt'
 #batch_size = 2
 logger_freq = 4000
 learning_rate = 1e-5
