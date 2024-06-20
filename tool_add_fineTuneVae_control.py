@@ -67,11 +67,11 @@ import torch
 from share import *
 from cldm.model import create_model
 
-import debugpy
+# import debugpy
 
-debugpy.listen(("0.0.0.0", 7979))
-print("Waiting for client to attach...")
-debugpy.wait_for_client()
+# debugpy.listen(("0.0.0.0", 7979))
+# print("Waiting for client to attach...")
+# debugpy.wait_for_client()
 
 
 def get_node_name(name, parent_name):
@@ -85,7 +85,7 @@ def get_node_name(name, parent_name):
 os.environ["CUDA_VISIBLE_DEVICES"]="0"
 print(torch.cuda.device_count())
 
-vae_pretrained_weights = torch.load('./VaeModel/fineTune.ckpt', map_location=lambda storage, loc: storage.cuda(0))
+vae_pretrained_weights = torch.load('./VaeModel/fineTune2.ckpt', map_location=lambda storage, loc: storage.cuda(0))
 if 'state_dict' in vae_pretrained_weights:
     vae_pretrained_weights = vae_pretrained_weights['state_dict']
     
@@ -114,12 +114,15 @@ for k in scratch_dict.keys():
             copy_k = copy_k[18:]
             target_dict[k] = vae_pretrained_weights[copy_k].clone()
             print(f'VAE weight: {k}')
+        elif re.search('.*transformer_blocks.0.attn2.to_k.weight.*', copy_k) or re.search('.*transformer_blocks.0.attn2.to_v.weight.*', copy_k) :
+            target_dict[k] = scratch_dict[k].clone()
+            print(f'att not load: {k}')
         else:
-            target_dict[k] = pretrained_weights[k].clone()
+            target_dict[k] = pretrained_weights[copy_k].clone()
             #print(f'These weights are old added: {k}')
     else:
-        target_dict[k] = pretrained_weights[k].clone()
-        print(f'Old pretrained: {k}')
+        target_dict[k] = scratch_dict[k].clone()
+        print(f'These weights are newly added: {k}')
 
 model.load_state_dict(target_dict, strict=True)
 torch.save(model.state_dict(), output_path)

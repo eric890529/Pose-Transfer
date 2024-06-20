@@ -17,9 +17,9 @@ from ldm.modules.diffusionmodules.util import (
     timestep_embedding,
 )
 
-debugpy.listen(("0.0.0.0", 7979))
-print("Waiting for client to attach...")
-debugpy.wait_for_client()
+# debugpy.listen(("0.0.0.0", 7979))
+# print("Waiting for client to attach...")
+# debugpy.wait_for_client()
 
 
 import argparse
@@ -39,7 +39,7 @@ DataConf.data.train.batch_size = args.batch_size//2  #src -> tgt , tgt -> src
 val_dataset, train_dataset = deepfashion_data.get_train_val_dataloader(DataConf.data, labels_required = True, distributed = False)
 
 # Configs
-resume_path = './models/idea4_attnFliter.ckpt'
+resume_path = './models/idea4_fineTuneVae.ckpt'
 # resume_path = './checkpoint_for_idea4_all_attnFliter_only_Attn/new_exp_sd21_epoch=103_step=384000.ckpt'
 #batch_size = 2
 logger_freq = 4000
@@ -87,10 +87,10 @@ model.only_mid_control = only_mid_control
 from pytorch_lightning.callbacks import ModelCheckpoint
 
 import os
-directory = "checkpoint_for_idea4_all_attnFliter_only_Attn"
+directory = "checkpoint_for_idea4_all_attnFliter_only_Attn_fineTuneVAE"
 if not os.path.exists(directory):
     os.makedirs(directory)
-acc_size = 1 #2
+acc_size = 2
 checkpoint_callback = ModelCheckpoint(dirpath = directory,
                                       save_top_k = -1,
                                       every_n_train_steps=9000, save_last=True, #4000/1000

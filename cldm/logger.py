@@ -33,8 +33,8 @@ class ImageLogger(Callback):
                 if k != 'control':
                     grid = (grid + 1.0) / 2.0  # -1,1 -> 0,1; c,h,w
             if k == 'control':
-                grid, pose, pose_dist = torch.split(grid, [3,3,17], dim = 0)
-                
+                pose, pose_dist = torch.split(grid, [3,17], dim = 0)
+                grid = pose
                 import torchvision.transforms as transforms
                 mean = torch.tensor([0.5, 0.5, 0.5], dtype=torch.float32)
                 std = torch.tensor([0.5, 0.5, 0.5], dtype=torch.float32)
@@ -109,4 +109,4 @@ class ImageLogger(Callback):
 
     def on_train_batch_end(self, trainer, pl_module, outputs, batch, batch_idx):
         if not self.disabled:
-            self.log_img(pl_module, batch, batch_idx, split="train/idea1_2_for_idea4_all_attnFliter_only_Attn")
+            self.log_img(pl_module, batch, batch_idx, split="train/idea1_2_for_idea4_all_attnFliter_only_Attn_fineTuneVAE")
