@@ -4,7 +4,6 @@ training/
 lightning_logs/
 image_log/
 
-attnVisualizer/
 deepfashion_dataset/
 *.jpg
 *.png
