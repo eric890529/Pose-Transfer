@@ -457,7 +457,7 @@ def p_sample_ddim(x, c, t, index, repeat_noise=False, use_original_steps=False, 
         noise = torch.nn.functional.dropout(noise, p=noise_dropout)
     x_prev = a_prev.sqrt() * pred_x0 + dir_xt + noise
     return x_prev, pred_x0
-
+#以上為ddim生成圖片 和 抓attention map的部分 不會動到
 
 get_local.activate() 
 
@@ -482,15 +482,13 @@ DataConf.data.val.batch_size = batch_size
 
 val_dataset, train_dataset = deepfashion_data.get_train_val_dataloader(DataConf.data, labels_required = True, distributed = False)
 
-ckpt_list = ["new_exp_sd21_epoch=200_step=744000.ckpt"]
-dir = 'checkpoint_for_idea4_all_attnFliter_only_Attn/'
+#設置checkpoint
+ckpt_list = ["new_exp_sd21_epoch=200_step=618000.ckpt"]
+dir = 'checkpoint_for_idea4_all/'
 path = "/workspace/ControlNet_idea1_2/" + dir
 
-# dir_list = os.listdir(path)
-# print("Files and directories in '", path, "' :")
-# # prints all files
-# print(dir_list)
-gpu = 0
+#設置gpu id
+gpu = 1
 import os 
 os.environ['CUDA_VISIBLE_DEVICES'] = str(gpu)
 torch.cuda.set_device(gpu)
@@ -547,32 +545,21 @@ for ckpt in ckpt_list:
             if config.save_memory:
                 model.low_vram_shift(is_diffusing=False)
 
-            x_samples = model.decode_first_stage(samples)
-            x_samples = (einops.rearrange(x_samples, 'b c h w -> b h w c') * 127.5 + 127.5).cpu().numpy().clip(0, 255).astype(np.uint8)
-
-            results = [x_samples[i] for i in range(batch_size)]
-            path = './inferenceValDataset_idea4_all_attnFliter_only_Attn_testAttnmap_' + epoch 
-            if not os.path.exists(path):
-                os.makedirs(path)
-            index = 0
-            for result in results:
-                path = './inferenceValDataset_idea4_all_attnFliter_only_Attn_testAttnmap_' + epoch 
-                path = path + '/' + x["path"][index]
-                # Image.fromarray(result).save(path)
-                index += 1
 
         cache = get_local.cache
         print(list(cache.keys()))
-        # for i in range(batch_size):
+
         source, target = x['path'][0].split('_2_')
         source += '.png'
         target = target.split('_vis')[0] +'.png'
+
         datasetDir = '/workspace/dataset/dataset/deepfashion/real_testDataset/test_256x256/'
-        filePath = './AttnMapImage/testAttnmap/model_' + str(modelId) + '/'
+        filePath = './AttnMapImage/test/model_' + str(modelId) + '/'
 
         if not os.path.exists(filePath):
             os.makedirs(filePath)
 
+        # 抓source target圖片
         source = Image.open(datasetDir + source)
         target = Image.open(datasetDir + target)
 
@@ -584,28 +571,17 @@ for ckpt in ckpt_list:
         target.save(filePath + "/target.png")
         source.save(filePath + "/source.png")
         
-        
-        attn_map = attn_map_cache[-46:]
-        # temp = []
-        # temp2 = [[] for i in range(batch_size)]
-
-        # for i in range(len(attn_map)):
-        #     temp = []
-        #     temp.extend(np.split(attn_map_cache[i], 2, axis = 0))
-        #     for j in range(len(temp)):
-        #         temp2[j].append(temp[j])
-        
-        # attn_map = []
-        # for i in range(len(temp2)):
-        #     attn_map.extend(temp2[i])
-            # np.concatenate((attn_map, temp2[i]), axis = 0)
+        #取最後一層attnention map
+        attn_map = attn_map_cache[-46:] 
 
         attn_map = [np.expand_dims(item, axis=0) for item in attn_map]
         # attn_map = attn_map.unsqueeze(0)
-        grid = 60 #340+32+32-3
-        iterate = 50
-        attn_layer = 46 - 1
+        grid = 60 #340+32+32-3 #設置圖片關注在哪一個方塊
+
+        attn_layer = 46 - 1 # 哪一層attention layer
         index = 0
+
+        # 儲存8個attention head的權重圖片
         for i in range(8):
             # visualize_head(attn_map[attn_layer][0,i], i)
             visualize_grid_to_grid(attn_map[attn_layer][0,i,:,:], grid, target, source, filePath, index)

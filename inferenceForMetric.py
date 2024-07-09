@@ -19,8 +19,8 @@ import os
 
 import torchvision
 from PIL import Image
-from attnVisualizer.visualizer import get_local
-get_local.activate() 
+# from attnVisualizer.visualizer import get_local
+# get_local.activate() 
 
 # debugpy.listen(("0.0.0.0", 7979))
 # print("Waiting for client to attach...")
@@ -43,8 +43,8 @@ DataConf.data.val.batch_size = batch_size
 
 val_dataset, train_dataset = deepfashion_data.get_train_val_dataloader(DataConf.data, labels_required = True, distributed = False)
 
-ckpt_list = ["new_exp_sd21_epoch=200_step=744000.ckpt"]
-dir = 'checkpoint_for_idea4_all_attnFliter_only_Attn/'
+ckpt_list = ["new_exp_sd21_epoch=201_step=747000.ckpt"]
+dir = 'checkpoint_for_idea4_all_attnFliter_only_Attn_fineTuneVAE/'
 path = "/workspace/ControlNet_idea1_2/" + dir
 
 # dir_list = os.listdir(path)

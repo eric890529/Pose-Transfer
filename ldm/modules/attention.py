@@ -142,63 +142,8 @@ class SpatialSelfAttention(nn.Module):
         return x+h_
 
 
-# class CrossAttention(nn.Module):
-#     def __init__(self, query_dim, context_dim=None, heads=8, dim_head=64, dropout=0.):
-#         super().__init__()
-#         inner_dim = dim_head * heads
-#         context_dim = default(context_dim, query_dim)
-
-#         self.scale = dim_head ** -0.5
-#         self.heads = heads
-
-#         self.to_q = nn.Linear(query_dim, inner_dim, bias=False)
-#         self.to_k = nn.Linear(context_dim, inner_dim, bias=False)
-#         self.to_v = nn.Linear(context_dim, inner_dim, bias=False)
-#         #可以在load dict+一個參數 硬load
-
-#         self.to_out = nn.Sequential(
-#             nn.Linear(inner_dim, query_dim),
-#             nn.Dropout(dropout)
-#         )
-
-#     def forward(self, x, context=None, mask=None):
-#         h = self.heads
-
-#         q = self.to_q(x)
-#         context = default(context, x) #變成x 做self attentoin?
-        
-#         # layer = nn.Linear(context.shape[2], self.to_k.in_features, bias=False).to("cuda") #因為權重的size就是768(CLIP的大小)所以這邊硬讓他變768
-#         # context = layer(context)
-
-#         k = self.to_k(context)
-#         v = self.to_v(context)
-
-#         q, k, v = map(lambda t: rearrange(t, 'b n (h d) -> (b h) n d', h=h), (q, k, v))
-
-#         # force cast to fp32 to avoid overflowing
-#         if _ATTN_PRECISION =="fp32":
-#             with torch.autocast(enabled=False, device_type = 'cuda'):
-#                 q, k = q.float(), k.float()
-#                 sim = einsum('b i d, b j d -> b i j', q, k) * self.scale
-#         else:
-#             sim = einsum('b i d, b j d -> b i j', q, k) * self.scale
-        
-#         del q, k
-    
-#         if exists(mask):
-#             mask = rearrange(mask, 'b ... -> b (...)')
-#             max_neg_value = -torch.finfo(sim.dtype).max
-#             mask = repeat(mask, 'b j -> (b h) () j', h=h)
-#             sim.masked_fill_(~mask, max_neg_value)
-
-#         # attention, what we cannot get enough of
-#         sim = sim.softmax(dim=-1)
-
-#         out = einsum('b i j, b j d -> b i d', sim, v)
-#         out = rearrange(out, '(b h) n d -> b n (h d)', h=h)
-#         return self.to_out(out)
 class CrossAttention(nn.Module):
-    def __init__(self, query_dim, context_dim=None, heads=8, dim_head=64, dropout=0.,num_filters=64):
+    def __init__(self, query_dim, context_dim=None, heads=8, dim_head=64, dropout=0.):
         super().__init__()
         inner_dim = dim_head * heads
         context_dim = default(context_dim, query_dim)
@@ -215,65 +160,31 @@ class CrossAttention(nn.Module):
             nn.Linear(inner_dim, query_dim),
             nn.Dropout(dropout)
         )
-        
-        self.extraction_filters = nn.Parameter(torch.randn(num_filters, inner_dim))
-        self.distribution_filters = nn.Parameter(torch.randn(num_filters, inner_dim))
-    
-    def getAttnScore(self, q, k):
-        if _ATTN_PRECISION =="fp32":
-            with torch.autocast(enabled=False, device_type = 'cuda'):
-                q, k = q.float(), k.float()
-                sim = einsum('b i d, b j d -> b i j', q, k) * self.scale
-        else:
-            sim = einsum('b i d, b j d -> b i j', q, k) * self.scale
-        return sim
-    
-    @get_local('attention_probs')
+
+    @get_local('sim')
     def forward(self, x, context=None, mask=None):
         h = self.heads
 
         q = self.to_q(x)
         context = default(context, x) #變成x 做self attentoin?
-
+        
         # layer = nn.Linear(context.shape[2], self.to_k.in_features, bias=False).to("cuda") #因為權重的size就是768(CLIP的大小)所以這邊硬讓他變768
         # context = layer(context)
 
         k = self.to_k(context)
         v = self.to_v(context)
 
-        batch_size = x.shape[0]
-
-        extraction_filters = self.extraction_filters.unsqueeze(0).expand(
-            batch_size, -1, -1
-        )
-        distribution_filters = self.distribution_filters.unsqueeze(0).expand(
-            batch_size, -1, -1
-        )
-
         q, k, v = map(lambda t: rearrange(t, 'b n (h d) -> (b h) n d', h=h), (q, k, v))
 
-        extraction_filters, distribution_filters = map(lambda t: rearrange(t, 'b n (h d) -> (b h) n d', h=h), (extraction_filters, distribution_filters))
-
-        spatial_attention_probs = self.getAttnScore(extraction_filters, k)
-        spatial_attention_probs = spatial_attention_probs.softmax(-1)
-
-        channel_attention_probs = self.getAttnScore(distribution_filters, q)
-        channel_attention_probs = channel_attention_probs.softmax(1)
-
-        # attention_probs = self.getAttnScore(spatial_attention_probs, channel_attention_probs)
-        attention_probs = torch.bmm(
-            channel_attention_probs.transpose(-1, -2), spatial_attention_probs
-        )
-        # # force cast to fp32 to avoid overflowing
-        # if _ATTN_PRECISION =="fp32":
-        #     with torch.autocast(enabled=False, device_type = 'cuda'):
-        #         q, k = q.float(), k.float()
-        #         sim = einsum('b i d, b j d -> b i j', q, k) * self.scale
-        # else:
-        #     sim = einsum('b i d, b j d -> b i j', q, k) * self.scale
+        # force cast to fp32 to avoid overflowing
+        if _ATTN_PRECISION =="fp32":
+            with torch.autocast(enabled=False, device_type = 'cuda'):
+                q, k = q.float(), k.float()
+                sim = einsum('b i d, b j d -> b i j', q, k) * self.scale
+        else:
+            sim = einsum('b i d, b j d -> b i j', q, k) * self.scale
         
         del q, k
-
     
         if exists(mask):
             mask = rearrange(mask, 'b ... -> b (...)')
@@ -282,13 +193,104 @@ class CrossAttention(nn.Module):
             sim.masked_fill_(~mask, max_neg_value)
 
         # attention, what we cannot get enough of
-        # sim = sim.softmax(dim=-1)
-        # print("probs = ", attention_probs.shape)
-        # print("v = ", v.shape)
-        out = torch.bmm(attention_probs, v)
-        # out = einsum('b i j, b j d -> b i d', attention_probs, v)
+        sim = sim.softmax(dim=-1)
+
+        out = einsum('b i j, b j d -> b i d', sim, v)
         out = rearrange(out, '(b h) n d -> b n (h d)', h=h)
         return self.to_out(out)
+    
+# class CrossAttention(nn.Module):
+#     def __init__(self, query_dim, context_dim=None, heads=8, dim_head=64, dropout=0.,num_filters=64):
+#         super().__init__()
+#         inner_dim = dim_head * heads
+#         context_dim = default(context_dim, query_dim)
+
+#         self.scale = dim_head ** -0.5
+#         self.heads = heads
+
+#         self.to_q = nn.Linear(query_dim, inner_dim, bias=False)
+#         self.to_k = nn.Linear(context_dim, inner_dim, bias=False)
+#         self.to_v = nn.Linear(context_dim, inner_dim, bias=False)
+#         #可以在load dict+一個參數 硬load
+
+#         self.to_out = nn.Sequential(
+#             nn.Linear(inner_dim, query_dim),
+#             nn.Dropout(dropout)
+#         )
+        
+#         self.extraction_filters = nn.Parameter(torch.randn(num_filters, inner_dim))
+#         self.distribution_filters = nn.Parameter(torch.randn(num_filters, inner_dim))
+    
+#     def getAttnScore(self, q, k):
+#         if _ATTN_PRECISION =="fp32":
+#             with torch.autocast(enabled=False, device_type = 'cuda'):
+#                 q, k = q.float(), k.float()
+#                 sim = einsum('b i d, b j d -> b i j', q, k) * self.scale
+#         else:
+#             sim = einsum('b i d, b j d -> b i j', q, k) * self.scale
+#         return sim
+    
+#     @get_local('attention_probs')
+#     def forward(self, x, context=None, mask=None):
+#         h = self.heads
+
+#         q = self.to_q(x)
+#         context = default(context, x) #變成x 做self attentoin?
+
+#         # layer = nn.Linear(context.shape[2], self.to_k.in_features, bias=False).to("cuda") #因為權重的size就是768(CLIP的大小)所以這邊硬讓他變768
+#         # context = layer(context)
+
+#         k = self.to_k(context)
+#         v = self.to_v(context)
+
+#         batch_size = x.shape[0]
+
+#         extraction_filters = self.extraction_filters.unsqueeze(0).expand(
+#             batch_size, -1, -1
+#         )
+#         distribution_filters = self.distribution_filters.unsqueeze(0).expand(
+#             batch_size, -1, -1
+#         )
+
+#         q, k, v = map(lambda t: rearrange(t, 'b n (h d) -> (b h) n d', h=h), (q, k, v))
+
+#         extraction_filters, distribution_filters = map(lambda t: rearrange(t, 'b n (h d) -> (b h) n d', h=h), (extraction_filters, distribution_filters))
+
+#         spatial_attention_probs = self.getAttnScore(extraction_filters, k)
+#         spatial_attention_probs = spatial_attention_probs.softmax(-1)
+
+#         channel_attention_probs = self.getAttnScore(distribution_filters, q)
+#         channel_attention_probs = channel_attention_probs.softmax(1)
+
+#         # attention_probs = self.getAttnScore(spatial_attention_probs, channel_attention_probs)
+#         attention_probs = torch.bmm(
+#             channel_attention_probs.transpose(-1, -2), spatial_attention_probs
+#         )
+#         # # force cast to fp32 to avoid overflowing
+#         # if _ATTN_PRECISION =="fp32":
+#         #     with torch.autocast(enabled=False, device_type = 'cuda'):
+#         #         q, k = q.float(), k.float()
+#         #         sim = einsum('b i d, b j d -> b i j', q, k) * self.scale
+#         # else:
+#         #     sim = einsum('b i d, b j d -> b i j', q, k) * self.scale
+        
+#         del q, k
+
+    
+#         if exists(mask):
+#             mask = rearrange(mask, 'b ... -> b (...)')
+#             max_neg_value = -torch.finfo(sim.dtype).max
+#             mask = repeat(mask, 'b j -> (b h) () j', h=h)
+#             sim.masked_fill_(~mask, max_neg_value)
+
+#         # attention, what we cannot get enough of
+#         # sim = sim.softmax(dim=-1)
+#         # print("probs = ", attention_probs.shape)
+#         # print("v = ", v.shape)
+#         out = torch.bmm(attention_probs, v)
+#         # out = einsum('b i j, b j d -> b i d', attention_probs, v)
+#         out = rearrange(out, '(b h) n d -> b n (h d)', h=h)
+#         return self.to_out(out)
     
 class MemoryEfficientCrossAttention(nn.Module):
     # https://github.com/MatthieuTPHR/diffusers/blob/d80b531ff8060ec1ea982b65a1b8df70f73aa67c/src/diffusers/models/attention.py#L223
