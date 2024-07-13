@@ -162,7 +162,7 @@ def visualize_grid_to_grid(att_map, grid_index, target, source, filepath, index,
     H,W = att_map.shape
     with_cls_token = False
       
-    grid_target = highlight_grid(target, [grid_index], grid_size, False)
+    grid_target = highlight_grid(target, [grid_index], grid_size, True)
     grid_source = highlight_grid(source, [grid_index], grid_size, False)
     
     mask = att_map[grid_index].reshape(grid_size[0], grid_size[1])
@@ -485,7 +485,7 @@ val_dataset, train_dataset = deepfashion_data.get_train_val_dataloader(DataConf.
 #設置checkpoint
 ckpt_list = ["new_exp_sd21_epoch=200_step=618000.ckpt"]
 dir = 'checkpoint_for_idea4_all/'
-path = "/workspace/ControlNet_idea1_2/" + dir
+path = "/workspace/ControlNet_idea1_2/ckpt/" + dir
 
 #設置gpu id
 gpu = 1
@@ -494,14 +494,13 @@ os.environ['CUDA_VISIBLE_DEVICES'] = str(gpu)
 torch.cuda.set_device(gpu)
 
 
-
 for ckpt in ckpt_list:
     eIdx = ckpt.find("epoch")
     epoch = ckpt[eIdx:eIdx+9]
     epoch = epoch.replace("=", "_")
 
     model = create_model('./models/idea4.yaml').cpu()
-    model.load_state_dict(load_state_dict('./'+ dir + ckpt, location='cpu'))
+    model.load_state_dict(load_state_dict(path + ckpt, location='cpu'))
     model = model.cuda(gpu) #
     # model.eval()
 
@@ -553,8 +552,8 @@ for ckpt in ckpt_list:
         source += '.png'
         target = target.split('_vis')[0] +'.png'
 
-        datasetDir = '/workspace/dataset/dataset/deepfashion/real_testDataset/test_256x256/'
-        filePath = './AttnMapImage/test/model_' + str(modelId) + '/'
+        datasetDir = '/workspace/dataset/dataset/deepfashion/real_testDataset/test_256x256/' #原始圖檔位置
+        filePath = './AttnMapImage/test/model_' + str(modelId) + '/' #生成圖片路徑
 
         if not os.path.exists(filePath):
             os.makedirs(filePath)
@@ -576,7 +575,7 @@ for ckpt in ckpt_list:
 
         attn_map = [np.expand_dims(item, axis=0) for item in attn_map]
         # attn_map = attn_map.unsqueeze(0)
-        grid = 60 #340+32+32-3 #設置圖片關注在哪一個方塊
+        grid = 60  #設置圖片關注在哪一個方塊
 
         attn_layer = 46 - 1 # 哪一層attention layer
         index = 0

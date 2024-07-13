@@ -20,12 +20,12 @@ from ldm.modules.diffusionmodules.util import (
     zero_module,
     timestep_embedding,
 )
-debugpy.listen(("0.0.0.0", 7689))
-print("Waiting for client to attach...")
-debugpy.wait_for_client()
+# debugpy.listen(("0.0.0.0", 7689))
+# print("Waiting for client to attach...")
+# debugpy.wait_for_client()
 # Configs
 
-resume_path = './models/idea4_fineTuneVae.ckpt'
+resume_path = './models/idea4.ckpt'
 # resume_path = './checkpoint_for_idea4_all_attnFliter_only_Attn/new_exp_sd21_epoch=103_step=384000.ckpt'
 #batch_size = 2
 logger_freq = 4000
@@ -59,10 +59,9 @@ temp2 = torch.randn(1, 3, 256, 256).cuda()
 
 c = {"c_concat" : [temp1], "c_style" : [temp2]}
 tensor = (input, c,)
-flops = FlopCountAnalysis(model, tensor)
-params = parameter_count_table(model)
-# flops, params = profile(model, inputs=(input,c))
-print(f"FLOPs: {flops.total()}")
+# flops = FlopCountAnalysis(model, tensor)
+# params = parameter_count_table(model)
+flops, params = profile(model, inputs=(input,c))
+print(f"FLOPs: {flops}")
 print(f"Params: {params}")
 
-#Bert(hfl/chinese-roberta-wwm-ext) FLOPs:67.1 GFLOPS   MACs:33.52 GMACs   Params:102.27 M 

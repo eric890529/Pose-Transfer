@@ -150,7 +150,7 @@ def get_random_params(size, scale_param):
 parser = argparse.ArgumentParser(description='help')
 parser.add_argument('--dataset_path', type=str, default='/workspace/dataset/dataset/deepfashion')
 parser.add_argument('--DataConfigPath', type=str, default='./dataConfig/data.yaml')
-parser.add_argument('--batch_size', type=int, default=25)
+parser.add_argument('--batch_size', type=int, default=1)
 
 args = parser.parse_args()
 
@@ -163,9 +163,9 @@ DataConf.data.val.batch_size = batch_size
 
 # val_dataset, train_dataset = deepfashion_data.get_train_val_dataloader(DataConf.data, labels_required = True, distributed = False)
 
-ckpt_list = ["temp_new_exp_sd21_epoch=200_step=744000.ckpt"]
+ckpt_list = ["new_exp_sd21_epoch=200_step=744000.ckpt"]
 dir = 'checkpoint_for_idea4_all_attnFliter_only_Attn/'
-path = "/workspace/ControlNet_idea1_2/" + dir
+path = "/workspace/ControlNet_idea1_2/ckpt/" + dir
 
 # dir_list = os.listdir(path)
 # print("Files and directories in '", path, "' :")
@@ -186,7 +186,7 @@ for ckpt in ckpt_list:
     epoch = epoch.replace("=", "_")
 
     model = create_model('./models/idea4.yaml').cpu()
-    model.load_state_dict(load_state_dict('./'+ dir + ckpt, location='cpu'))
+    model.load_state_dict(load_state_dict('./ckpt/'+ dir + ckpt, location='cpu'))
     model = model.cuda(gpu) #
     # model.eval()
     ddim_sampler = DDIMSampler(model)
@@ -204,8 +204,9 @@ for ckpt in ckpt_list:
 
     with torch.no_grad():
         
-        model_id = 8
-        for i in range(16,17):
+        model_id = 8 #選擇reference模特兒的id
+        style_range = 17
+        for i in range(0,style_range):# style圖片的range 總共有16個衣服可以換
             #load style image
             image = './styleChangeImage/style/style'+ str(i) +'.png'
             src = Image.open(image)
